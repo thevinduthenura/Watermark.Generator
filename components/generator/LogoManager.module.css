@@ -1,0 +1,200 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.helperText {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.dropZone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  background: var(--bg-card-subtle);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.dropZone:hover {
+  border-color: var(--accent-green);
+  color: var(--text-primary);
+  background: rgba(0, 177, 64, 0.05);
+}
+
+.logoList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logoCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: grab;
+  transition: all var(--transition-fast);
+}
+
+.logoCard:hover {
+  border-color: var(--border-medium);
+}
+
+.logoCard.isDragging {
+  opacity: 0.5;
+  border-color: var(--accent-green);
+}
+
+.thumbWrap {
+  width: 44px;
+  height: 44px;
+  background: #181b20;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.thumbImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardDim {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.btnRemove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.btnRemove:hover {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.qrRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.qrThumb {
+  width: 50px;
+  height: 50px;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.slotItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slotLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.slotPreview {
+  position: relative;
+  height: 60px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.slotUploadBtn {
+  height: 60px;
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: var(--bg-card-subtle);
+  transition: all var(--transition-fast);
+}
+
+.slotUploadBtn:hover {
+  border-color: var(--accent-green);
+  color: var(--text-primary);
+}

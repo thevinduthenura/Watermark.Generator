@@ -1,0 +1,88 @@
+{
+  "name": "SSC PGC Standard Banner",
+  "blankTag": "blank-tag.png",
+  "naturalWidth": 5184,
+  "naturalHeight": 285,
+  "placement": {
+    "widthPercent": 100,
+    "bottomMarginPercent": 0,
+    "align": "center"
+  },
+  "fields": [
+    {
+      "id": "event",
+      "label": "Event Name",
+      "placeholder": "COLOURS NIGHT 2026",
+      "defaultValue": "ANNUAL COLOURS NIGHT",
+      "box": { "x": 0.30, "y": 0.10, "w": 0.41, "h": 0.80 },
+      "font": "Outfit",
+      "weight": 700,
+      "color": "#ffffff",
+      "align": "center",
+      "valign": "middle",
+      "uppercase": false,
+      "maxFontSize": 0.58,
+      "minFontSize": 0.20,
+      "maxLines": 2
+    },
+    {
+      "id": "photographer",
+      "label": "Photographer",
+      "placeholder": "THEVINDU THENURA",
+      "defaultValue": "PHOTOGRAPHED BY THEVINDU",
+      "box": { "x": 0.73, "y": 0.14, "w": 0.205, "h": 0.45 },
+      "font": "Inter",
+      "weight": 600,
+      "color": "#ffffff",
+      "align": "right",
+      "valign": "middle",
+      "uppercase": true,
+      "maxFontSize": 0.32,
+      "minFontSize": 0.14,
+      "maxLines": 1
+    },
+    {
+      "id": "copyright",
+      "label": "Copyright / Sub-text",
+      "placeholder": "ALL RIGHTS RESERVED © 2026",
+      "defaultValue": "ALL RIGHTS RESERVED © 2026",
+      "box": { "x": 0.73, "y": 0.60, "w": 0.205, "h": 0.26 },
+      "font": "Inter",
+      "weight": 400,
+      "color": "#9a9a9a",
+      "align": "right",
+      "valign": "middle",
+      "uppercase": true,
+      "maxFontSize": 0.18,
+      "minFontSize": 0.10,
+      "maxLines": 1
+    },
+    {
+      "id": "club_name",
+      "label": "Club Name",
+      "placeholder": "SSC PHOTOGRAPHIC CLUB",
+      "defaultValue": "SSC PHOTOGRAPHIC CLUB",
+      "box": { "x": 0.045, "y": 0.25, "w": 0.15, "h": 0.50 },
+      "font": "Outfit",
+      "weight": 600,
+      "color": "#ffffff",
+      "align": "left",
+      "valign": "middle",
+      "uppercase": true,
+      "maxFontSize": 0.30,
+      "minFontSize": 0.14,
+      "maxLines": 1
+    }
+  ],
+  "logoSlots": [],
+  "qrSlot": {
+    "label": "QR Code",
+    "box": { "x": 0.945, "y": 0.14, "w": 0.042, "h": 0.72 }
+  },
+  "extraLogosZone": {
+    "box": { "x": 0.20, "y": 0.18, "w": 0.085, "h": 0.64 },
+    "gapPercent": 0.008,
+    "align": "center"
+  },
+  "googleFonts": ["Outfit", "Inter"]
+}
