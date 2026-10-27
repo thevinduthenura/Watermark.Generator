@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, SlidersHorizontal, User, LogIn } from "lucide-react";
+import { Sparkles, Stamp, SlidersHorizontal, User, LogIn } from "lucide-react";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
-  activeTab?: "generator" | "admin" | "portal" | "login";
+  activeTab?: "generator" | "stamper" | "admin" | "portal" | "login";
 }
 
 export default function Header({ activeTab = "generator" }: HeaderProps) {
@@ -55,6 +55,14 @@ export default function Header({ activeTab = "generator" }: HeaderProps) {
           >
             <Sparkles size={13} />
             <span>GENERATOR</span>
+          </Link>
+          <Link
+            href="/stamper"
+            className={`${styles.navLink} ${activeTab === "stamper" ? styles.active : ""}`}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Stamp size={13} />
+            <span>PHOTO STAMPER</span>
           </Link>
           <Link
             href="/portal"
