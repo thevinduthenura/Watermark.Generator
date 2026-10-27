@@ -3,6 +3,7 @@
 import type { SelectedItemRef } from "./BuilderCanvas";
 import type { Box, ExtraLogosZone, LogoSlot, QrSlot, Template, TextField } from "@/lib/types";
 import { POPULAR_FONTS, ensureGoogleFont, registerCustomFontFromFile } from "@/lib/fonts";
+import { Trash2, Upload } from "lucide-react";
 import styles from "./PropertyPanel.module.css";
 
 interface PropertyPanelProps {
@@ -39,9 +40,11 @@ export default function PropertyPanel({
           <button
             type="button"
             className="btn-danger"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
             onClick={() => onDeleteItem(selectedItem)}
           >
-            Delete Field
+            <Trash2 size={13} />
+            <span>Delete Field</span>
           </button>
         </div>
 
@@ -79,8 +82,9 @@ export default function PropertyPanel({
           <div className={styles.fieldItem}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
               <span className="input-label" style={{ marginBottom: 0 }}>Font Family</span>
-              <label className="btn-secondary" style={{ fontSize: "0.72rem", padding: "2px 8px", cursor: "pointer" }}>
-                <span>+ Upload Font</span>
+              <label className="btn-secondary" style={{ fontSize: "0.72rem", padding: "3px 8px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Upload size={11} />
+                <span>Upload Font</span>
                 <input
                   type="file"
                   accept=".woff2,.ttf,.otf"
@@ -280,9 +284,11 @@ export default function PropertyPanel({
           <button
             type="button"
             className="btn-danger"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
             onClick={() => onDeleteItem(selectedItem)}
           >
-            Delete Slot
+            <Trash2 size={13} />
+            <span>Delete Slot</span>
           </button>
         </div>
 
@@ -319,9 +325,11 @@ export default function PropertyPanel({
           <button
             type="button"
             className="btn-danger"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
             onClick={() => onDeleteItem(selectedItem)}
           >
-            Delete QR Slot
+            <Trash2 size={13} />
+            <span>Delete QR Slot</span>
           </button>
         </div>
 
@@ -355,9 +363,11 @@ export default function PropertyPanel({
           <button
             type="button"
             className="btn-danger"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
             onClick={() => onDeleteItem(selectedItem)}
           >
-            Delete Zone
+            <Trash2 size={13} />
+            <span>Delete Zone</span>
           </button>
         </div>
 
@@ -570,8 +580,9 @@ export default function PropertyPanel({
 
         <div className={styles.fieldItem}>
           <span className="input-label">Upload Template Font (.woff2, .ttf, .otf)</span>
-          <label className="btn-secondary" style={{ width: "fit-content" }}>
-            <span>+ Add Font File</span>
+          <label className="btn-secondary" style={{ width: "fit-content", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Upload size={13} />
+            <span>Add Font File</span>
             <input
               type="file"
               accept=".woff2,.ttf,.otf"

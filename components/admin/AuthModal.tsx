@@ -7,6 +7,7 @@ import {
   adminSignOut,
   isSupabaseConfigured,
 } from "@/lib/supabase";
+import { AlertTriangle, LogIn, LogOut } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import styles from "./AuthModal.module.css";
 
@@ -89,8 +90,14 @@ export default function AuthModal({ onSessionChange }: AuthModalProps) {
           <span className={styles.onlineDot} />
           <span className={styles.userEmail}>{user.email} (Admin)</span>
         </div>
-        <button type="button" className="btn-secondary" onClick={handleLogout}>
-          Sign Out
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          onClick={handleLogout}
+        >
+          <LogOut size={13} />
+          <span>Sign Out</span>
         </button>
       </div>
     );
@@ -103,7 +110,12 @@ export default function AuthModal({ onSessionChange }: AuthModalProps) {
         Sign in with your verified Supabase admin account to publish templates directly to the cloud.
       </p>
 
-      {error && <div className={styles.alertError}>⚠️ {error}</div>}
+      {error && (
+        <div className={styles.alertError} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
+        </div>
+      )}
 
       <form onSubmit={handleLogin} className={styles.form}>
         <input
@@ -125,10 +137,11 @@ export default function AuthModal({ onSessionChange }: AuthModalProps) {
         <button
           type="submit"
           className="btn-primary"
-          style={{ width: "100%" }}
+          style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "SIGNING IN..." : "SIGN IN AS ADMIN"}
+          <LogIn size={14} />
+          <span>{isSubmitting ? "SIGNING IN..." : "SIGN IN AS ADMIN"}</span>
         </button>
       </form>
     </div>

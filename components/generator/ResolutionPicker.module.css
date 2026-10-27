@@ -143,8 +143,8 @@
 }
 
 .presetCard.cardChecked {
-  border-color: var(--accent-green);
-  background: rgba(0, 177, 64, 0.04);
+  border-color: var(--accent);
+  background: rgba(212, 255, 0, 0.06);
 }
 
 .presetInfo {

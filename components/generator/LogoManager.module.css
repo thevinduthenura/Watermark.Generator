@@ -39,9 +39,9 @@
 }
 
 .dropZone:hover {
-  border-color: var(--accent-green);
+  border-color: var(--accent);
   color: var(--text-primary);
-  background: rgba(0, 177, 64, 0.05);
+  background: rgba(212, 255, 0, 0.05);
 }
 
 .logoList {

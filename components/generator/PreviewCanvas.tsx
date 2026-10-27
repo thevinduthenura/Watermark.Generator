@@ -5,6 +5,7 @@ import { bannerRect, renderBanner } from "@/lib/renderer";
 import { get2d } from "@/lib/imageDraw";
 import { buildBaseFilename } from "@/lib/export";
 import type { LoadedTemplate, Orientation, RenderInputs, Size } from "@/lib/types";
+import { Eye } from "lucide-react";
 import styles from "./PreviewCanvas.module.css";
 
 interface PreviewCanvasProps {
@@ -75,6 +76,7 @@ export default function PreviewCanvas({
       <div className={styles.cardHeader}>
         <div className={styles.headerLeft}>
           <span className={styles.liveDot} />
+          <Eye size={13} style={{ color: "var(--accent)" }} />
           <span className={styles.headerTitle}>LIVE BANNER PREVIEW</span>
         </div>
         <span className={styles.renderBadge}>

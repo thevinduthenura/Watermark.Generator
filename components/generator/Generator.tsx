@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
 import DynamicFields from "./DynamicFields";
 import LogoManager from "./LogoManager";
 import ResolutionPicker from "./ResolutionPicker";
@@ -21,9 +22,11 @@ import type {
   TemplateRef,
   UserImage,
 } from "@/lib/types";
+import { CheckCircle2, AlertTriangle, AlertCircle, Download } from "lucide-react";
 import styles from "./Generator.module.css";
 
 export default function Generator() {
+  const workspaceRef = useRef<HTMLDivElement>(null);
   const [templateRefs, setTemplateRefs] = useState<TemplateRef[]>([]);
   const [currentRef, setCurrentRef] = useState<TemplateRef | null>(null);
   const [loaded, setLoaded] = useState<LoadedTemplate | null>(null);
@@ -52,7 +55,27 @@ export default function Generator() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
+  // GSAP Entrance animation when template is loaded
+  useEffect(() => {
+    if (!loaded || !workspaceRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        `.${styles.sectionCard}`,
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.65, stagger: 0.1, ease: "power3.out" }
+      );
+      gsap.fromTo(
+        `.${styles.previewColumn}`,
+        { opacity: 0, x: 25 },
+        { opacity: 1, x: 0, duration: 0.75, delay: 0.15, ease: "power3.out" }
+      );
+    }, workspaceRef);
+
+    return () => ctx.revert();
+  }, [loaded]);
+
   // 1. Initial template discovery and state restore
+
   useEffect(() => {
     let active = true;
     async function init() {
@@ -229,7 +252,7 @@ export default function Generator() {
       });
 
       setExportSuccess(
-        `🎯 Custom tag "${file.name}" loaded (${w} × ${h}px, ratio ${(w / h).toFixed(1)}:1)!`
+        `Custom tag "${file.name}" loaded (${w} × ${h}px, ratio ${(w / h).toFixed(1)}:1)!`
       );
     } catch (err) {
       console.error("Failed to load custom tag:", err);
@@ -306,8 +329,9 @@ export default function Generator() {
   return (
     <div className={styles.mainContainer}>
       {loadError && (
-        <div className={styles.alertError}>
-          <span>⚠️ {loadError}</span>
+        <div className={styles.alertError} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertCircle size={16} style={{ flexShrink: 0 }} />
+          <span>{loadError}</span>
         </div>
       )}
 
@@ -317,7 +341,7 @@ export default function Generator() {
           <span>Loading template assets...</span>
         </div>
       ) : loaded ? (
-        <div className={styles.workspaceGrid}>
+        <div ref={workspaceRef} className={styles.workspaceGrid}>
           {/* LEFT COLUMN: Numbered Controls */}
           <div className={styles.formColumn}>
             {/* SECTION 01: DETAILS */}
@@ -404,8 +428,9 @@ export default function Generator() {
                       <span>GENERATING...</span>
                     </>
                   ) : (
-                    <span>
-                      DOWNLOAD {targetSizes.length > 1 ? `ZIP (${targetSizes.length} FILES)` : "PNG"}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                      <Download size={15} />
+                      <span>DOWNLOAD {targetSizes.length > 1 ? `ZIP (${targetSizes.length} FILES)` : "PNG"}</span>
                     </span>
                   )}
                 </button>
@@ -425,14 +450,16 @@ export default function Generator() {
                 )}
 
                 {exportSuccess && (
-                  <div className={styles.alertSuccess}>
-                    <span>✓ {exportSuccess}</span>
+                  <div className={styles.alertSuccess} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+                    <span>{exportSuccess}</span>
                   </div>
                 )}
 
                 {exportError && (
-                  <div className={styles.alertError}>
-                    <span>⚠️ {exportError}</span>
+                  <div className={styles.alertError} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                    <span>{exportError}</span>
                   </div>
                 )}
               </div>

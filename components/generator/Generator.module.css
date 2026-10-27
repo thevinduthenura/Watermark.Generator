@@ -148,10 +148,10 @@
 .alertSuccess {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(0, 177, 64, 0.1);
-  border: 1px solid var(--accent-green);
+  background: rgba(212, 255, 0, 0.1);
+  border: 1px solid var(--accent);
   border-radius: var(--radius-md);
-  color: #86efac;
+  color: #D4FF00;
   font-size: 12px;
 }
 
