@@ -1,0 +1,95 @@
+.canvasContainer {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  user-select: none;
+  cursor: crosshair;
+}
+
+.blankTagImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.boxOverlay {
+  position: absolute;
+  cursor: move;
+  border-width: 1px;
+  border-style: solid;
+  transition: box-shadow var(--transition-fast);
+}
+
+.fieldBox {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.logoBox {
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.qrBox {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.extraBox {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.activeBox {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 14px rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+
+.boxTag {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  padding: 1px 4px;
+  border-radius: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border: 1px solid #000;
+  border-radius: 2px;
+}
+
+.handleSe {
+  right: -5px;
+  bottom: -5px;
+  cursor: se-resize;
+}
+
+.handleNw {
+  left: -5px;
+  top: -5px;
+  cursor: nw-resize;
+}
+
+.drawingGhost {
+  position: absolute;
+  border: 2px dashed var(--accent-green);
+  background: rgba(0, 177, 64, 0.2);
+  pointer-events: none;
+  z-index: 20;
+}
