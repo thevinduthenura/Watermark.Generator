@@ -98,7 +98,7 @@ export interface Template {
 }
 
 /** Where a template came from, for listing in the UI. */
-export type TemplateSource = "repo" | "cloud";
+export type TemplateSource = "repo" | "cloud" | "custom";
 
 export interface TemplateRef {
   id: string;

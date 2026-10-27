@@ -10,6 +10,7 @@ import { listAllTemplates, loadTemplate } from "@/lib/template";
 import { runExport, type ExportProgress } from "@/lib/export";
 import { RESOLUTION_PRESETS, orientSize } from "@/lib/resolutions";
 import { loadSavedState, saveState } from "@/lib/storage";
+import { loadPhotographerProfile } from "@/lib/portalStorage";
 import { detectBannerBounds, cropImageRegion } from "@/lib/imageDraw";
 import { loadImage, readFileAsDataUrl } from "@/lib/utils";
 import type {
@@ -113,10 +114,28 @@ export default function Generator() {
         if (!active) return;
         setLoaded(loadedData);
 
-        // Populate initial field values from saved or defaults
+        // Populate initial field values from saved or profile or defaults
+        const profile = loadPhotographerProfile();
         const initialVals: Record<string, string> = {};
         for (const f of loadedData.template.fields) {
-          initialVals[f.id] = saved?.values?.[f.id] ?? f.defaultValue ?? "";
+          if (saved?.values?.[f.id] !== undefined && saved.values[f.id] !== "") {
+            initialVals[f.id] = saved.values[f.id];
+          } else {
+            const lower = f.id.toLowerCase();
+            if (lower.includes("photo") || lower.includes("credit") || lower.includes("author") || lower.includes("by")) {
+              initialVals[f.id] = profile.photographerName || f.defaultValue || "";
+            } else if (lower.includes("event") || lower.includes("title") || lower.includes("main")) {
+              initialVals[f.id] = profile.eventTitle || f.defaultValue || "";
+            } else if (lower.includes("club") || lower.includes("studio") || lower.includes("sub")) {
+              initialVals[f.id] = profile.studioName || f.defaultValue || "";
+            } else if (lower.includes("copy") || lower.includes("rights")) {
+              initialVals[f.id] = profile.copyrightNotice || f.defaultValue || "";
+            } else if (lower.includes("tag") || lower.includes("handle") || lower.includes("insta")) {
+              initialVals[f.id] = profile.instagram || f.defaultValue || "";
+            } else {
+              initialVals[f.id] = f.defaultValue ?? "";
+            }
+          }
         }
         setValues(initialVals);
       } catch (err: unknown) {

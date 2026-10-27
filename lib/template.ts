@@ -135,12 +135,32 @@ export function validateTemplate(data: unknown): Template {
 }
 
 /**
- * List all available templates (cloud + repo fallback).
+ * List all available templates (custom local + cloud + repo fallback).
  */
 export async function listAllTemplates(): Promise<TemplateRef[]> {
   const list: TemplateRef[] = [];
 
-  // 1. Try Supabase cloud templates
+  // 1. Try local custom template saved from Admin Builder
+  if (typeof window !== "undefined") {
+    try {
+      const customRaw = localStorage.getItem("watermark_admin_custom_template_v1");
+      if (customRaw) {
+        const parsed = JSON.parse(customRaw);
+        if (parsed && parsed.template && parsed.template.name) {
+          list.push({
+            id: "custom:admin",
+            name: `${parsed.template.name} (Custom Studio)`,
+            source: "custom",
+            baseUrl: "",
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not read local custom template:", err);
+    }
+  }
+
+  // 2. Try Supabase cloud templates
   try {
     const cloud = await listCloudTemplates();
     list.push(...cloud);
@@ -148,7 +168,7 @@ export async function listAllTemplates(): Promise<TemplateRef[]> {
     console.warn("Could not fetch cloud templates:", err);
   }
 
-  // 2. Fetch repo templates from /templates/index.json
+  // 3. Fetch repo templates from /templates/index.json
   try {
     const res = await fetch(`${cleanBase}/templates/index.json`);
     if (res.ok) {
@@ -185,8 +205,19 @@ export async function listAllTemplates(): Promise<TemplateRef[]> {
 export async function loadTemplate(ref: TemplateRef): Promise<LoadedTemplate> {
   let template: Template;
   let baseUrl = ref.baseUrl;
+  let customBlankTagDataUrl: string | null = null;
 
-  if (ref.source === "cloud") {
+  if (ref.source === "custom" || ref.id === "custom:admin") {
+    if (typeof window === "undefined") {
+      throw new Error("Custom template can only be loaded in browser");
+    }
+    const customRaw = localStorage.getItem("watermark_admin_custom_template_v1");
+    if (!customRaw) throw new Error("No custom template saved locally");
+    const parsed = JSON.parse(customRaw);
+    template = validateTemplate(parsed.template);
+    customBlankTagDataUrl = parsed.blankTagDataUrl || null;
+    baseUrl = "";
+  } else if (ref.source === "cloud") {
     const slug = ref.id.replace(/^cloud:/, "");
     const cloudResult = await fetchCloudTemplate(slug);
     if (!cloudResult) {
@@ -204,11 +235,20 @@ export async function loadTemplate(ref: TemplateRef): Promise<LoadedTemplate> {
   }
 
   // Blank tag URL
-  const blankTagUrl = template.blankTag.startsWith("http://") ||
+  let blankTagUrl: string;
+  if (customBlankTagDataUrl) {
+    blankTagUrl = customBlankTagDataUrl;
+  } else if (
+    template.blankTag.startsWith("http://") ||
     template.blankTag.startsWith("https://") ||
     template.blankTag.startsWith("data:")
-      ? template.blankTag
-      : `${baseUrl.replace(/\/$/, "")}/${template.blankTag.replace(/^\//, "")}`;
+  ) {
+    blankTagUrl = template.blankTag;
+  } else {
+    blankTagUrl = baseUrl
+      ? `${baseUrl.replace(/\/$/, "")}/${template.blankTag.replace(/^\//, "")}`
+      : `${cleanBase}/templates/default/blank-tag.png`;
+  }
 
   // Preload fonts
   if (template.fonts && template.fonts.length) {

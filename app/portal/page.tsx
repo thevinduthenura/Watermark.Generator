@@ -68,20 +68,28 @@ export default function UserPortalPage() {
   }, [activeTab]);
 
   const handleProfileChange = (field: keyof PhotographerProfile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+    setProfile((prev) => {
+      const next = { ...prev, [field]: value };
+      savePhotographerProfile(next);
+      applyProfileToGenerator(next);
+      return next;
+    });
   };
 
   const handleSaveProfile = () => {
     savePhotographerProfile(profile);
-    setFeedback("Photographer profile saved locally.");
+    applyProfileToGenerator(profile);
+    setFeedback("Photographer profile saved and active!");
     setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleApplyToGenerator = () => {
     savePhotographerProfile(profile);
     applyProfileToGenerator(profile);
-    setFeedback("Profile defaults successfully pushed to Watermark Generator session!");
-    setTimeout(() => setFeedback(null), 3500);
+    setFeedback("Profile synced! Launching Watermark Generator...");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 700);
   };
 
   const handleActivatePreset = (preset: StudioPreset) => {

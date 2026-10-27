@@ -143,24 +143,38 @@ export function applyProfileToGenerator(profile: PhotographerProfile): void {
   const current = loadSavedState() || { values: {}, selectedResolutions: ["5184x3456"], orientation: "landscape" };
   const updatedValues = { ...(current.values || {}) };
 
-  // Common field ID mappings matching templates
+  // Explicitly map all known standard template field IDs
+  updatedValues["event"] = profile.eventTitle;
+  updatedValues["eventTitle"] = profile.eventTitle;
+  updatedValues["title"] = profile.eventTitle;
+  updatedValues["photographer"] = profile.photographerName;
+  updatedValues["photo"] = profile.photographerName;
+  updatedValues["credit"] = profile.photographerName;
+  updatedValues["author"] = profile.photographerName;
+  updatedValues["copyright"] = profile.copyrightNotice;
+  updatedValues["rights"] = profile.copyrightNotice;
+  updatedValues["club_name"] = profile.studioName;
+  updatedValues["studio"] = profile.studioName;
+  updatedValues["subtitle"] = profile.studioName;
+  updatedValues["sub"] = profile.studioName;
+  updatedValues["instagram"] = profile.instagram;
+  updatedValues["tag"] = profile.instagram;
+
+  // Dynamically update any other existing keys based on substring matching
   for (const key of Object.keys(updatedValues)) {
     const lower = key.toLowerCase();
     if (lower.includes("photo") || lower.includes("credit") || lower.includes("author") || lower.includes("by")) {
       updatedValues[key] = profile.photographerName;
     } else if (lower.includes("event") || lower.includes("title") || lower.includes("main")) {
       updatedValues[key] = profile.eventTitle;
+    } else if (lower.includes("club") || lower.includes("studio") || lower.includes("sub")) {
+      updatedValues[key] = profile.studioName;
     } else if (lower.includes("tag") || lower.includes("handle") || lower.includes("insta")) {
       updatedValues[key] = profile.instagram;
     } else if (lower.includes("copy") || lower.includes("rights")) {
       updatedValues[key] = profile.copyrightNotice;
     }
   }
-
-  // Also ensure generic keys are set
-  if (!updatedValues["photographer"]) updatedValues["photographer"] = profile.photographerName;
-  if (!updatedValues["eventTitle"]) updatedValues["eventTitle"] = profile.eventTitle;
-  if (!updatedValues["subtitle"]) updatedValues["subtitle"] = profile.studioName;
 
   saveState({
     ...current,
@@ -174,28 +188,38 @@ export function applyPresetToGenerator(preset: StudioPreset): void {
 
   // Overlay preset values
   if (preset.values.eventTitle) {
-    for (const k of Object.keys(updatedValues)) {
-      if (k.toLowerCase().includes("event") || k.toLowerCase().includes("title")) {
-        updatedValues[k] = preset.values.eventTitle;
-      }
-    }
+    updatedValues["event"] = preset.values.eventTitle;
     updatedValues["eventTitle"] = preset.values.eventTitle;
+    updatedValues["title"] = preset.values.eventTitle;
   }
   if (preset.values.photographer) {
-    for (const k of Object.keys(updatedValues)) {
-      if (k.toLowerCase().includes("photo") || k.toLowerCase().includes("by")) {
-        updatedValues[k] = preset.values.photographer;
-      }
-    }
     updatedValues["photographer"] = preset.values.photographer;
+    updatedValues["photo"] = preset.values.photographer;
+    updatedValues["credit"] = preset.values.photographer;
   }
   if (preset.values.subtitle) {
-    for (const k of Object.keys(updatedValues)) {
-      if (k.toLowerCase().includes("sub")) {
-        updatedValues[k] = preset.values.subtitle;
-      }
-    }
+    updatedValues["club_name"] = preset.values.subtitle;
+    updatedValues["studio"] = preset.values.subtitle;
     updatedValues["subtitle"] = preset.values.subtitle;
+    updatedValues["sub"] = preset.values.subtitle;
+  }
+  if (preset.values.tag) {
+    updatedValues["instagram"] = preset.values.tag;
+    updatedValues["tag"] = preset.values.tag;
+  }
+
+  // Scan and match remaining keys
+  for (const k of Object.keys(updatedValues)) {
+    const lower = k.toLowerCase();
+    if (preset.values.eventTitle && (lower.includes("event") || lower.includes("title"))) {
+      updatedValues[k] = preset.values.eventTitle;
+    } else if (preset.values.photographer && (lower.includes("photo") || lower.includes("by") || lower.includes("credit"))) {
+      updatedValues[k] = preset.values.photographer;
+    } else if (preset.values.subtitle && (lower.includes("sub") || lower.includes("club") || lower.includes("studio"))) {
+      updatedValues[k] = preset.values.subtitle;
+    } else if (preset.values.tag && (lower.includes("tag") || lower.includes("insta"))) {
+      updatedValues[k] = preset.values.tag;
+    }
   }
 
   saveState({

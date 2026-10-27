@@ -8,6 +8,7 @@ import BuilderCanvas, { type SelectedItemRef, type SelectableItemType } from "@/
 import PropertyPanel from "@/components/admin/PropertyPanel";
 import AuthModal from "@/components/admin/AuthModal";
 import { validateTemplate } from "@/lib/template";
+import { loadSavedState, saveState } from "@/lib/storage";
 import {
   adminSaveTemplate,
   adminUploadTemplateFile,
@@ -319,13 +320,37 @@ export default function AdminPage() {
     setStatusMessage({ type: "success", text: `Loaded layout preset "${presetKey.toUpperCase()}"` });
   };
 
-  // Load initial default blank tag image
+  // Load initial template (from saved local draft or default blank tag)
   useEffect(() => {
     async function loadInitial() {
       try {
+        // 1. Check if user already has a saved draft template in localStorage
+        if (typeof window !== "undefined") {
+          const draftRaw = localStorage.getItem("watermark_admin_custom_template_v1");
+          if (draftRaw) {
+            try {
+              const parsed = JSON.parse(draftRaw);
+              if (parsed && parsed.template) {
+                setTemplate(parsed.template);
+                if (parsed.blankTagDataUrl) {
+                  const draftImg = await loadImage(parsed.blankTagDataUrl);
+                  setBlankTagImg(draftImg);
+                  // create blob from dataUrl
+                  const resBlob = await fetch(parsed.blankTagDataUrl);
+                  const b = await resBlob.blob();
+                  setBlankTagBlob(b);
+                  return;
+                }
+              }
+            } catch (err) {
+              console.warn("Could not parse draft template:", err);
+            }
+          }
+        }
+
+        // 2. Default blank tag fallback
         const img = await loadImage(DEFAULT_BLANK_TAG_PATH);
         setBlankTagImg(img);
-        // Also fetch blob for export
         const res = await fetch(DEFAULT_BLANK_TAG_PATH);
         if (res.ok) {
           const blob = await res.blob();
@@ -337,6 +362,57 @@ export default function AdminPage() {
     }
     loadInitial();
   }, []);
+
+  // Save template locally and activate in Generator
+  const handleSaveAndActivateInGenerator = async () => {
+    try {
+      setStatusMessage({ type: "success", text: "Saving template to local studio session..." });
+
+      let dataUrl = "";
+      if (blankTagBlob) {
+        dataUrl = await readFileAsDataUrl(blankTagBlob);
+      } else if (blankTagImg) {
+        const canvas = document.createElement("canvas");
+        canvas.width = blankTagImg.naturalWidth || blankTagImg.width;
+        canvas.height = blankTagImg.naturalHeight || blankTagImg.height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(blankTagImg, 0, 0);
+          dataUrl = canvas.toDataURL("image/png");
+        }
+      }
+
+      const payload = {
+        template,
+        blankTagDataUrl: dataUrl,
+      };
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("watermark_admin_custom_template_v1", JSON.stringify(payload));
+
+        const saved = loadSavedState() || { values: {}, selectedResolutions: ["5184x3456"], orientation: "landscape" };
+        saveState({
+          ...saved,
+          templateId: "custom:admin",
+        });
+      }
+
+      setStatusMessage({
+        type: "success",
+        text: `Template "${template.name}" activated! Redirecting to Generator...`,
+      });
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 700);
+    } catch (err) {
+      console.error("Failed to activate template in generator:", err);
+      setStatusMessage({
+        type: "error",
+        text: "Could not save template locally. Check image size.",
+      });
+    }
+  };
 
 
   // Handle uploading a new Blank Tag PNG
@@ -714,7 +790,25 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <AuthModal onSessionChange={setAdminUser} />
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleSaveAndActivateInGenerator}
+              style={{
+                padding: "9px 18px",
+                fontSize: "12px",
+                letterSpacing: "0.1em",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <Sparkles size={14} />
+              <span>ACTIVATE IN GENERATOR</span>
+            </button>
+            <AuthModal onSessionChange={setAdminUser} />
+          </div>
         </div>
 
         {/* Quick Layout Presets Bar */}
@@ -995,6 +1089,25 @@ export default function AdminPage() {
         {/* Action Footer: Export ZIP & Publish Cloud */}
 
         <div className={styles.actionCard}>
+          <div className={styles.actionCol} style={{ background: "rgba(212, 255, 0, 0.04)", border: "1px solid rgba(212, 255, 0, 0.25)", borderRadius: "8px", padding: "18px" }}>
+            <h3 className={styles.actionTitle} style={{ color: "var(--accent-green)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Sparkles size={16} />
+              <span>Instant Generator Sync</span>
+            </h3>
+            <p className={styles.actionDesc}>
+              Save your watermark template into your local browser studio session right now and launch the Watermark Generator immediately with this design.
+            </p>
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ width: "100%", justifyContent: "center", display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "10px" }}
+              onClick={handleSaveAndActivateInGenerator}
+            >
+              <Sparkles size={15} />
+              <span>SAVE & USE IN GENERATOR NOW</span>
+            </button>
+          </div>
+
           <div className={styles.actionCol}>
             <h3 className={styles.actionTitle}>Offline & Repository Package</h3>
             <p className={styles.actionDesc}>
