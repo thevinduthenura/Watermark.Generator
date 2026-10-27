@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -35,7 +36,7 @@ export default function Footer() {
 
         <div className={styles.bottomRow}>
           <div className={styles.privacyNotice}>
-            <span className={styles.lockIcon}>🔒</span>
+            <ShieldCheck size={18} className={styles.lockIcon} style={{ color: "var(--accent)", flexShrink: 0 }} />
             <span>
               <strong>Zero-Upload Privacy:</strong> All watermark processing, image decoding, and
               text composition happens 100% inside your local browser. Your photos, partner logos,

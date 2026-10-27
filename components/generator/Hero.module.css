@@ -31,13 +31,31 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(11, 12, 14, 0.4) 0%,
-    rgba(11, 12, 14, 0.7) 60%,
-    rgba(11, 12, 14, 0.98) 100%
+    rgba(16, 16, 16, 0.4) 0%,
+    rgba(16, 16, 16, 0.75) 60%,
+    rgba(16, 16, 16, 0.98) 100%
   );
 }
 
+.ambientHeroGlow {
+  position: absolute;
+  left: 5%;
+  bottom: 0;
+  width: 500px;
+  height: 250px;
+  background: radial-gradient(
+    circle,
+    rgba(212, 255, 0, 0.16) 0%,
+    rgba(212, 255, 0, 0.04) 45%,
+    transparent 70%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .content {
+
   position: relative;
   z-index: 2;
   max-width: 1400px;

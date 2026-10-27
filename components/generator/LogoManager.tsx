@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { UploadCloud, Plus, X, QrCode, Trash2 } from "lucide-react";
 import { loadImage, readFileAsDataUrl } from "@/lib/utils";
 import type { ExtraLogosDividerOptions, LoadedTemplate, UserImage } from "@/lib/types";
 import styles from "./LogoManager.module.css";
@@ -150,9 +151,11 @@ export default function LogoManager({
             <button
               type="button"
               className="btn-secondary"
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
               onClick={() => fileInputRef.current?.click()}
             >
-              + ADD LOGOS
+              <Plus size={13} />
+              <span>ADD LOGOS</span>
             </button>
             <input
               ref={fileInputRef}
@@ -190,7 +193,7 @@ export default function LogoManager({
                     title="Remove Logo"
                     onClick={() => removeExtraLogo(idx)}
                   >
-                    ×
+                    <X size={15} />
                   </button>
                 </div>
               ))}
@@ -199,7 +202,9 @@ export default function LogoManager({
             <div
               className={styles.dropZone}
               onClick={() => fileInputRef.current?.click()}
+              style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "center" }}
             >
+              <UploadCloud size={24} style={{ color: "var(--accent)" }} />
               <span>Click or drop partner/sponsor logos here (PNG, SVG, JPG, WebP)</span>
             </div>
           )}
@@ -316,9 +321,11 @@ export default function LogoManager({
               <button
                 type="button"
                 className="btn-danger"
+                style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
                 onClick={() => onChangeQrImage(undefined)}
               >
-                Remove
+                <Trash2 size={13} />
+                <span>Remove</span>
               </button>
             </div>
           ) : (
@@ -326,9 +333,11 @@ export default function LogoManager({
               <button
                 type="button"
                 className="btn-secondary"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
                 onClick={() => qrInputRef.current?.click()}
               >
-                + UPLOAD QR CODE
+                <QrCode size={13} />
+                <span>UPLOAD QR CODE</span>
               </button>
               <input
                 ref={qrInputRef}
@@ -360,11 +369,12 @@ export default function LogoManager({
                         className={styles.btnRemove}
                         onClick={() => onChangeLogoSlot(slot.id, undefined)}
                       >
-                        ×
+                        <X size={14} />
                       </button>
                     </div>
                   ) : (
-                    <label className={styles.slotUploadBtn}>
+                    <label className={styles.slotUploadBtn} style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      <Plus size={12} />
                       <span>Upload</span>
                       <input
                         type="file"

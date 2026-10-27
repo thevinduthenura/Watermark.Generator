@@ -17,6 +17,22 @@ import { downloadBlob, loadImage, readFileAsArrayBuffer, readFileAsDataUrl, sani
 import { detectBannerBounds, cropImageRegion, type DetectedBounds } from "@/lib/imageDraw";
 import type { Box, Template, TemplateFont } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Crop,
+  Maximize2,
+  Info,
+  Upload,
+  MousePointer,
+  Type,
+  Image as ImageIcon,
+  QrCode,
+  Layers,
+  Download,
+  FolderOpen,
+  Send,
+} from "lucide-react";
 import styles from "./page.module.css";
 
 const DEFAULT_BLANK_TAG_PATH = "/templates/default/blank-tag.png";
@@ -158,7 +174,7 @@ export default function AdminPage() {
 
         setStatusMessage({
           type: "success",
-          text: `🎯 Auto-detected Photoshop full canvas (${bounds.canvasWidth} × ${bounds.canvasHeight}px)! Auto-cropped bottom watermark strip (${bounds.width} × ${bounds.height}px, ratio ${(bounds.width / bounds.height).toFixed(1)}:1).`,
+          text: `Auto-detected Photoshop full canvas (${bounds.canvasWidth} × ${bounds.canvasHeight}px)! Auto-cropped bottom watermark strip (${bounds.width} × ${bounds.height}px, ratio ${(bounds.width / bounds.height).toFixed(1)}:1).`,
         });
       } else {
         setFullCanvasState(null);
@@ -498,8 +514,14 @@ export default function AdminPage() {
             className={
               statusMessage.type === "success" ? styles.alertSuccess : styles.alertError
             }
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            {statusMessage.type === "success" ? "✓" : "⚠️"} {statusMessage.text}
+            {statusMessage.type === "success" ? (
+              <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+            ) : (
+              <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+            )}
+            <span>{statusMessage.text}</span>
           </div>
         )}
 
@@ -509,9 +531,11 @@ export default function AdminPage() {
             <button
               type="button"
               className="btn-secondary"
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
               onClick={() => blankTagInputRef.current?.click()}
             >
-              Upload Blank Tag PNG
+              <Upload size={13} />
+              <span>Upload Blank Tag PNG</span>
             </button>
             <input
               ref={blankTagInputRef}
@@ -530,12 +554,20 @@ export default function AdminPage() {
                 type="button"
                 className="btn-secondary"
                 onClick={handleToggleFullCanvas}
-                style={{ fontSize: "0.75rem", padding: "4px 10px", borderColor: "var(--accent)" }}
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderColor: "var(--accent)", display: "inline-flex", alignItems: "center", gap: "6px" }}
                 title="Toggle between cropped watermark strip and full Photoshop canvas"
               >
-                {fullCanvasState.isUsingCropped
-                  ? "✂️ Using Cropped Banner (Click for Full Canvas)"
-                  : "🖼️ Using Full Canvas (Click for Cropped Banner)"}
+                {fullCanvasState.isUsingCropped ? (
+                  <>
+                    <Crop size={13} />
+                    <span>Using Cropped Banner (Click for Full Canvas)</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 size={13} />
+                    <span>Using Full Canvas (Click for Cropped Banner)</span>
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -545,37 +577,47 @@ export default function AdminPage() {
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "select" ? styles.activeTool : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
               onClick={() => setActiveTool("select")}
             >
-              Select / Move
+              <MousePointer size={12} />
+              <span>Select / Move</span>
             </button>
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "add_field" ? styles.activeTool : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
               onClick={() => setActiveTool("add_field")}
             >
-              + Text Field
+              <Type size={12} />
+              <span>Text Field</span>
             </button>
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "add_logo" ? styles.activeTool : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
               onClick={() => setActiveTool("add_logo")}
             >
-              + Logo Slot
+              <ImageIcon size={12} />
+              <span>Logo Slot</span>
             </button>
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "add_qr" ? styles.activeTool : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
               onClick={() => setActiveTool("add_qr")}
             >
-              + QR Slot
+              <QrCode size={12} />
+              <span>QR Slot</span>
             </button>
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "add_extra" ? styles.activeTool : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
               onClick={() => setActiveTool("add_extra")}
             >
-              + Extra Logos Zone
+              <Layers size={12} />
+              <span>Extra Logos Zone</span>
             </button>
           </div>
         </div>
@@ -605,9 +647,12 @@ export default function AdminPage() {
               onCreatedBox={handleCreatedBox}
             />
 
-            <p className={styles.canvasHint}>
-              💡 <strong>Scaling:</strong> All boxes are stored as percentages of the banner
-              dimensions, ensuring identical proportions across 1080p, 4K, and 6000x4000 exports.
+            <p className={styles.canvasHint} style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+              <Info size={14} style={{ color: "var(--accent)", flexShrink: 0, marginTop: "2px" }} />
+              <span>
+                <strong>Scaling:</strong> All boxes are stored as percentages of the banner
+                dimensions, ensuring identical proportions across 1080p, 4K, and 6000x4000 exports.
+              </span>
             </p>
           </div>
 
@@ -633,15 +678,23 @@ export default function AdminPage() {
               <code>public/templates/index.json</code>.
             </p>
             <div className={styles.btnRow}>
-              <button type="button" className="btn-secondary" onClick={handleExportZip}>
-                Export Template ZIP
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                onClick={handleExportZip}
+              >
+                <Download size={13} />
+                <span>Export Template ZIP</span>
               </button>
               <button
                 type="button"
                 className="btn-secondary"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
                 onClick={() => importZipInputRef.current?.click()}
               >
-                Import Template ZIP / JSON
+                <FolderOpen size={13} />
+                <span>Import Template ZIP / JSON</span>
               </button>
               <input
                 ref={importZipInputRef}
@@ -672,10 +725,12 @@ export default function AdminPage() {
                 <button
                   type="button"
                   className="btn-primary"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
                   onClick={handlePublishCloud}
                   disabled={publishing}
                 >
-                  {publishing ? "PUBLISHING..." : "SAVE & PUBLISH TO CLOUD"}
+                  <Send size={13} />
+                  <span>{publishing ? "PUBLISHING..." : "SAVE & PUBLISH TO CLOUD"}</span>
                 </button>
               </div>
             </div>

@@ -1,10 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Inter } from "next/font/google";
+import { Mona_Sans, Outfit, Inter } from "next/font/google";
 import "./globals.css";
+
+const monaSans = Mona_Sans({
+  subsets: ["latin"],
+  variable: "--font-mona",
+  display: "swap",
+});
 
 const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-outfit",
   display: "swap",
 });
@@ -25,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0c0e",
+  themeColor: "#101010",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
@@ -37,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
+    <html lang="en" className={`${monaSans.variable} ${outfit.variable} ${inter.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

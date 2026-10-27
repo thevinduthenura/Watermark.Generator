@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Upload, SlidersHorizontal, Plus, RotateCcw } from "lucide-react";
 import type { FieldAdjustment, Template, TemplateRef } from "@/lib/types";
 import { POPULAR_FONTS, ensureGoogleFont, registerCustomFontFromFile } from "@/lib/fonts";
 import styles from "./DynamicFields.module.css";
@@ -76,11 +77,12 @@ export default function DynamicFields({
             <button
               type="button"
               className="btn-secondary"
-              style={{ fontSize: "0.78rem", padding: "8px 12px", width: "100%" }}
+              style={{ fontSize: "0.78rem", padding: "8px 12px", width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
               onClick={() => customTagInputRef.current?.click()}
               title="Upload your own Photoshop canvas or blank watermark PNG"
             >
-              🖼️ Upload Custom Tag / PS Canvas
+              <Upload size={14} />
+              <span>Upload Custom Tag / PS Canvas</span>
             </button>
             <input
               ref={customTagInputRef}
@@ -117,8 +119,10 @@ export default function DynamicFields({
                     className={`${styles.btnToggleTune} ${isExpanded ? styles.activeToggle : ""}`}
                     onClick={() => setExpandedFieldId(isExpanded ? null : field.id)}
                     title="Fine-tune position, size, and font for this text"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
                   >
-                    🎛️ Adjust Box & Font
+                    <SlidersHorizontal size={12} />
+                    <span>Adjust Box & Font</span>
                   </button>
                 </div>
               </div>
@@ -140,8 +144,9 @@ export default function DynamicFields({
                   <div className={styles.tuneRow}>
                     <div className={styles.tuneHeader}>
                       <span className={styles.tuneLabel}>Font Family</span>
-                      <label className={styles.btnUploadFont}>
-                        <span>+ Custom Font (.ttf/.otf)</span>
+                      <label className={styles.btnUploadFont} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <Plus size={11} />
+                        <span>Custom Font (.ttf/.otf)</span>
                         <input
                           type="file"
                           accept=".woff2,.ttf,.otf"
@@ -252,10 +257,11 @@ export default function DynamicFields({
                     <button
                       type="button"
                       className="btn-secondary"
-                      style={{ fontSize: "0.72rem", padding: "3px 8px" }}
+                      style={{ fontSize: "0.72rem", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "5px" }}
                       onClick={() => resetAdj(field.id)}
                     >
-                      Reset Adjustments
+                      <RotateCcw size={11} />
+                      <span>Reset Adjustments</span>
                     </button>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import {
 } from "@/lib/resolutions";
 import { formatMegapixels } from "@/lib/utils";
 import type { Orientation, Size } from "@/lib/types";
+import { AlertTriangle } from "lucide-react";
 import styles from "./ResolutionPicker.module.css";
 
 interface ResolutionPickerProps {
@@ -198,7 +199,7 @@ export default function ResolutionPicker({
       {/* 5. Upscale Warning if applicable */}
       {hasUpscaling && (
         <div className={styles.warningBox}>
-          <span className={styles.warningIcon}>⚠️</span>
+          <AlertTriangle size={18} className={styles.warningIcon} style={{ flexShrink: 0 }} />
           <p className={styles.warningText}>
             <strong>Upscaling Notice:</strong> One or more selected output resolutions exceed
             the blank tag&apos;s natural width ({templateNaturalWidth}px). For maximum crispness,
