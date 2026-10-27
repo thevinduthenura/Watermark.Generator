@@ -101,11 +101,73 @@ create policy "Admin bucket delete"
   );
 
 -- ==============================================================================
--- INSTRUCTIONS TO ADD YOUR FIRST ADMIN:
--- 1. In Supabase Dashboard -> Authentication -> Users:
---    Click "Add user" -> "Create user" with an email and password.
--- 2. Copy the newly created user's UUID.
--- 3. Run:
---    insert into public.admins (user_id, email)
---    values ('YOUR-USER-UUID-HERE', 'admin@example.com');
+-- 4. User Profiles Table (Stores registered photographers/users in public schema)
 -- ==============================================================================
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  studio_name text,
+  role text default 'photographer',
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Policy: Everyone can view registered profiles (or authenticated only)
+create policy "Allow read profiles"
+  on public.profiles
+  for select
+  using (true);
+
+-- Policy: Authenticated users can insert their own profile
+create policy "Allow insert own profile"
+  on public.profiles
+  for insert
+  to authenticated
+  with check (auth.uid() = id);
+
+-- Policy: Users can update their own profile
+create policy "Allow update own profile"
+  on public.profiles
+  for update
+  to authenticated
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+-- Trigger: Automatically copy new registered user from auth.users to public.profiles
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, studio_name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'studio_name', split_part(new.email, '@', 1) || ' Studio'),
+    coalesce(new.raw_user_meta_data->>'role', 'photographer')
+  )
+  on conflict (id) do update set
+    email = excluded.email,
+    studio_name = excluded.studio_name;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- ==============================================================================
+-- HOW ADMIN ACCOUNTS WORK:
+--
+-- 1. Sign up on the app at http://localhost:3000/login or in Supabase Dashboard
+--    (Authentication -> Users -> Add User) with your email and password.
+--
+-- 2. Turn that user into an ADMIN by running this in Supabase SQL Editor:
+--    insert into public.admins (user_id, email)
+--    select id, email from auth.users where email = 'YOUR_EMAIL@EXAMPLE.COM'
+--    on conflict (user_id) do nothing;
+--
+-- 3. Now that user has full access to publish, edit, and delete cloud templates!
+-- ==============================================================================
+

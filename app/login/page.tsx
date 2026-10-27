@@ -11,6 +11,7 @@ import {
   adminSignOut,
   getSupabase,
   isSupabaseConfigured,
+  saveUserProfile,
 } from "@/lib/supabase";
 import gsap from "gsap";
 import {
@@ -225,14 +226,22 @@ export default function LoginPage() {
         });
         if (signUpError) throw new Error(signUpError.message);
         if (data.user) {
+          // Explicitly save to public.profiles table in PostgreSQL database
+          await saveUserProfile({
+            id: data.user.id,
+            email: data.user.email || email,
+            studio_name: studioName || "Milaq Visuals",
+            role: "photographer",
+          });
+
           const newUser: LocalUser = {
             email: data.user.email || email,
             name: studioName || "STUDIO PRO",
-            role: "Creator",
+            role: "Verified Creator",
           };
           setUser(newUser);
           localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(newUser));
-          setSuccess("Account created successfully! Check your email to verify.");
+          setSuccess("Account created & registered to database! Check your email to verify.");
         }
       } else {
         if (!email.trim() || !password.trim()) {
@@ -245,13 +254,25 @@ export default function LoginPage() {
         };
         setUser(newUser);
         localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(newUser));
-        setSuccess("Studio account created and active!");
+        setSuccess("Studio account created and active locally!");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to register");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdminDemoLogin = () => {
+    const adminUser: LocalUser = {
+      email: "admin@mrtheviya.studio",
+      name: "MR.THEVIYA (SUPER ADMIN)",
+      role: "Studio Director & Master Admin",
+    };
+    setUser(adminUser);
+    localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(adminUser));
+    setSuccess("Logged in as Super Admin (Full Builder & Cloud Access)!");
+    setError(null);
   };
 
   const handleQuickDemoLogin = () => {
@@ -655,20 +676,42 @@ export default function LoginPage() {
                     <span className={styles.dividerLine} />
                   </div>
 
-                  <button
-                    type="button"
-                    className={styles.demoPassBtn}
-                    onClick={handleQuickDemoLogin}
-                  >
-                    <div className={styles.demoPassIcon}>
-                      <Zap size={14} />
-                    </div>
-                    <div className={styles.demoPassContent}>
-                      <div className={styles.demoPassTitle}>INSTANT DEMO PHOTOGRAPHER PASS</div>
-                      <div className={styles.demoPassSub}>Alex Rivera · Milaq Visuals Studio Pro</div>
-                    </div>
-                    <span className={styles.demoBadge}>1-CLICK</span>
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <button
+                      type="button"
+                      className={styles.demoPassBtn}
+                      onClick={handleAdminDemoLogin}
+                      style={{ borderColor: "rgba(212, 255, 0, 0.45)" }}
+                    >
+                      <div className={styles.demoPassIcon} style={{ background: "rgba(212, 255, 0, 0.15)", color: "var(--accent-green)" }}>
+                        <ShieldCheck size={15} />
+                      </div>
+                      <div className={styles.demoPassContent}>
+                        <div className={styles.demoPassTitle} style={{ color: "var(--accent-green)" }}>
+                          SUPER ADMIN PASS (MR.THEVIYA)
+                        </div>
+                        <div className={styles.demoPassSub}>admin@mrtheviya.studio · Studio Director & Master Admin</div>
+                      </div>
+                      <span className={styles.demoBadge} style={{ background: "var(--accent-green)", color: "#101010" }}>
+                        ADMIN
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.demoPassBtn}
+                      onClick={handleQuickDemoLogin}
+                    >
+                      <div className={styles.demoPassIcon}>
+                        <Zap size={14} />
+                      </div>
+                      <div className={styles.demoPassContent}>
+                        <div className={styles.demoPassTitle}>DEMO PHOTOGRAPHER PASS</div>
+                        <div className={styles.demoPassSub}>demo@milaq.studio · Alex Rivera (Lead Photographer)</div>
+                      </div>
+                      <span className={styles.demoBadge}>1-CLICK</span>
+                    </button>
+                  </div>
                 </div>
               )}
 

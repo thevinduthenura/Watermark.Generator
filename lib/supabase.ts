@@ -242,3 +242,61 @@ export async function adminGetCurrentUser(): Promise<User | null> {
   const { data } = await sb.auth.getUser();
   return data.user || null;
 }
+
+export interface UserProfileRow {
+  id: string;
+  email: string;
+  studio_name: string;
+  role: string;
+  created_at?: string;
+}
+
+/**
+ * Save or update user profile in public.profiles table
+ */
+export async function saveUserProfile(profile: {
+  id: string;
+  email: string;
+  studio_name: string;
+  role?: string;
+}): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  try {
+    await sb.from("profiles").upsert(
+      {
+        id: profile.id,
+        email: profile.email,
+        studio_name: profile.studio_name,
+        role: profile.role || "photographer",
+      },
+      { onConflict: "id" }
+    );
+  } catch (err) {
+    console.warn("Failed to upsert user profile:", err);
+  }
+}
+
+/**
+ * List all registered photographer profiles for Admin view
+ */
+export async function adminListAllUsers(): Promise<UserProfileRow[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  try {
+    const { data, error } = await sb
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.warn("Profiles query:", error.message);
+      return [];
+    }
+    return (data as UserProfileRow[]) || [];
+  } catch (err) {
+    console.warn("Error fetching profiles:", err);
+    return [];
+  }
+}
+

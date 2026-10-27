@@ -10,10 +10,12 @@ import AuthModal from "@/components/admin/AuthModal";
 import { validateTemplate } from "@/lib/template";
 import { loadSavedState, saveState } from "@/lib/storage";
 import {
+  adminListAllUsers,
   adminSaveTemplate,
   adminUploadTemplateFile,
   isSupabaseConfigured,
   listCloudTemplates,
+  type UserProfileRow,
 } from "@/lib/supabase";
 import { downloadBlob, loadImage, readFileAsArrayBuffer, readFileAsDataUrl, sanitizeFilename } from "@/lib/utils";
 import { detectBannerBounds, cropImageRegion, type DetectedBounds } from "@/lib/imageDraw";
@@ -23,6 +25,7 @@ import gsap from "gsap";
 import {
   CheckCircle2,
   AlertTriangle,
+  Users,
   Crop,
   Maximize2,
   Info,
@@ -135,14 +138,19 @@ export default function AdminPage() {
   const importZipInputRef = useRef<HTMLInputElement>(null);
 
   const [cloudTemplatesList, setCloudTemplatesList] = useState<TemplateRef[]>([]);
+  const [cloudUsersList, setCloudUsersList] = useState<UserProfileRow[]>([]);
 
   const refreshCloudTemplates = async () => {
     if (isSupabaseConfigured()) {
       try {
-        const list = await listCloudTemplates();
-        setCloudTemplatesList(list);
+        const [templates, users] = await Promise.all([
+          listCloudTemplates(),
+          adminListAllUsers(),
+        ]);
+        setCloudTemplatesList(templates);
+        setCloudUsersList(users);
       } catch (e) {
-        console.warn("Failed to load cloud templates:", e);
+        console.warn("Failed to load cloud templates & users:", e);
       }
     }
   };
@@ -1337,6 +1345,98 @@ export default function AdminPage() {
                 ))}
               </div>
             )}
+
+            {/* Database Table 2: public.profiles */}
+            <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                <h4
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <Users size={14} color="var(--accent-green)" />
+                  <span>REGISTERED USERS & PHOTOGRAPHERS (TABLE: `public.profiles`)</span>
+                </h4>
+                <span style={{ fontSize: "11px", color: "var(--accent-green)", fontFamily: "var(--font-mono)" }}>
+                  {cloudUsersList.length} REGISTERED
+                </span>
+              </div>
+
+              {cloudUsersList.length === 0 ? (
+                <div
+                  style={{
+                    background: "#0a0a0a",
+                    border: "1px dashed rgba(255, 255, 255, 0.12)",
+                    borderRadius: "6px",
+                    padding: "16px",
+                    textAlign: "center",
+                    color: "#888",
+                    fontSize: "12px",
+                  }}
+                >
+                  <div>No users registered in <code>public.profiles</code> table yet.</div>
+                  <div style={{ marginTop: "4px", fontSize: "11px", color: "#666" }}>
+                    Users who sign up at <a href="/login" style={{ color: "var(--accent-green)", textDecoration: "underline" }}>/login</a> will automatically appear here!
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {cloudUsersList.map((u) => (
+                    <div
+                      key={u.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: "#0d0d0d",
+                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                        borderRadius: "6px",
+                        padding: "8px 14px",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#fff" }}>
+                          {u.studio_name || "Creator"}
+                        </div>
+                        <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "#888" }}>
+                          {u.email}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontFamily: "var(--font-mono)",
+                            textTransform: "uppercase",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            background: u.role === "admin" ? "rgba(212, 255, 0, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                            color: u.role === "admin" ? "var(--accent-green)" : "#aaa",
+                            border: `1px solid ${u.role === "admin" ? "var(--accent-green)" : "rgba(255, 255, 255, 0.1)"}`,
+                          }}
+                        >
+                          {u.role || "PHOTOGRAPHER"}
+                        </span>
+                        {u.created_at && (
+                          <span style={{ fontSize: "10px", color: "#666", fontFamily: "var(--font-mono)" }}>
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
