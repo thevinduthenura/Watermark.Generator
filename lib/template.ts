@@ -112,6 +112,10 @@ export function validateTemplate(data: unknown): Template {
       },
       gapPercent: Number(z.gapPercent) || 0.01,
       align: (z.align === "left" || z.align === "right" ? z.align : "center") as "left" | "center" | "right",
+      showDividers: Boolean(z.showDividers),
+      dividerWidth: Number(z.dividerWidth) || 1.5,
+      dividerColor: String(z.dividerColor || "rgba(255,255,255,0.25)"),
+      dividerHeightPercent: Math.max(0.1, Math.min(1.0, Number(z.dividerHeightPercent) || 0.75)),
     };
   }
 

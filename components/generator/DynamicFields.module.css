@@ -4,6 +4,21 @@
   gap: 18px;
 }
 
+.templateRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.templateSelectWrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.customTagUpload {
+  display: flex;
+}
+
 .fieldsGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -13,12 +28,19 @@
 .fieldItem {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 .labelRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .badgeUpper {
@@ -29,4 +51,87 @@
   border: 1px solid var(--border-subtle);
   padding: 1px 6px;
   border-radius: 4px;
+}
+
+.btnToggleTune {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-family: var(--font-body);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.btnToggleTune:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.activeToggle {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* Tuning disclosure card */
+.tuneCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.tuneRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tuneHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tuneLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.tuneVal {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.btnUploadFont {
+  font-size: 0.68rem;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: transparent;
+  transition: background var(--trans-fast);
+}
+
+.btnUploadFont:hover {
+  background: var(--accent-glow);
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 4px;
+  background: var(--surface-highest);
+  border-radius: 2px;
 }

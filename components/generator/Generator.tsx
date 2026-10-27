@@ -9,7 +9,18 @@ import { listAllTemplates, loadTemplate } from "@/lib/template";
 import { runExport, type ExportProgress } from "@/lib/export";
 import { RESOLUTION_PRESETS, orientSize } from "@/lib/resolutions";
 import { loadSavedState, saveState } from "@/lib/storage";
-import type { LoadedTemplate, Orientation, RenderInputs, Size, TemplateRef, UserImage } from "@/lib/types";
+import { detectBannerBounds, cropImageRegion } from "@/lib/imageDraw";
+import { loadImage, readFileAsDataUrl } from "@/lib/utils";
+import type {
+  ExtraLogosDividerOptions,
+  FieldAdjustment,
+  LoadedTemplate,
+  Orientation,
+  RenderInputs,
+  Size,
+  TemplateRef,
+  UserImage,
+} from "@/lib/types";
 import styles from "./Generator.module.css";
 
 export default function Generator() {
@@ -24,6 +35,8 @@ export default function Generator() {
   const [logoSlotImages, setLogoSlotImages] = useState<Record<string, UserImage | undefined>>({});
   const [qrImage, setQrImage] = useState<UserImage | undefined>(undefined);
   const [extraLogos, setExtraLogos] = useState<UserImage[]>([]);
+  const [fieldAdjustments, setFieldAdjustments] = useState<Record<string, FieldAdjustment>>({});
+  const [extraLogosDivider, setExtraLogosDivider] = useState<ExtraLogosDividerOptions | undefined>(undefined);
 
   // Resolution & Export Options
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>(["5184x3456"]);
@@ -69,6 +82,8 @@ export default function Generator() {
         if (saved?.customWidth) setCustomWidth(saved.customWidth);
         if (saved?.customHeight) setCustomHeight(saved.customHeight);
         if (saved?.bannerOnly !== undefined) setBannerOnly(saved.bannerOnly);
+        if (saved?.fieldAdjustments) setFieldAdjustments(saved.fieldAdjustments);
+        if (saved?.extraLogosDivider) setExtraLogosDivider(saved.extraLogosDivider);
 
         setCurrentRef(targetRef);
         const loadedData = await loadTemplate(targetRef);
@@ -132,6 +147,8 @@ export default function Generator() {
       customWidth,
       customHeight,
       bannerOnly,
+      fieldAdjustments,
+      extraLogosDivider,
       extraLogos: extraLogos.map((l) => ({
         id: l.id,
         name: l.name,
@@ -160,10 +177,64 @@ export default function Generator() {
     bannerOnly,
     extraLogos,
     qrImage,
+    fieldAdjustments,
+    extraLogosDivider,
   ]);
 
   const handleChangeValue = (fieldId: string, val: string) => {
     setValues((prev) => ({ ...prev, [fieldId]: val }));
+  };
+
+  const handleAdjustmentChange = (fieldId: string, adj: FieldAdjustment) => {
+    setFieldAdjustments((prev) => ({ ...prev, [fieldId]: adj }));
+  };
+
+  const handleUploadCustomTag = async (file: File) => {
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const img = await loadImage(dataUrl);
+      const bounds = detectBannerBounds(img);
+      let bannerImg: HTMLImageElement = img;
+      let bottomMargin = 0;
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+
+      if (bounds.isFullCanvas) {
+        const cropped = await cropImageRegion(img, 0, bounds.minY, bounds.width, bounds.height);
+        bannerImg = cropped.image;
+        w = bounds.width;
+        h = bounds.height;
+        bottomMargin = Math.max(
+          0,
+          Math.round(((bounds.canvasHeight - (bounds.minY + bounds.height)) / bounds.canvasHeight) * 100)
+        );
+      }
+
+      setLoaded((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          template: {
+            ...prev.template,
+            name: `Custom (${file.name.replace(/\.[^/.]+$/, "")})`,
+            naturalWidth: w,
+            naturalHeight: h,
+            placement: {
+              ...prev.template.placement,
+              bottomMarginPercent: bottomMargin,
+            },
+          },
+          blankTag: bannerImg,
+        };
+      });
+
+      setExportSuccess(
+        `🎯 Custom tag "${file.name}" loaded (${w} × ${h}px, ratio ${(w / h).toFixed(1)}:1)!`
+      );
+    } catch (err) {
+      console.error("Failed to load custom tag:", err);
+      setExportError("Failed to load custom tag image.");
+    }
   };
 
   // Memoize render inputs
@@ -173,8 +244,10 @@ export default function Generator() {
       logoSlotImages,
       qrImage,
       extraLogos,
+      fieldAdjustments,
+      extraLogosDivider,
     }),
-    [values, logoSlotImages, qrImage, extraLogos]
+    [values, logoSlotImages, qrImage, extraLogos, fieldAdjustments, extraLogosDivider]
   );
 
   // Compute selected sizes
@@ -260,6 +333,9 @@ export default function Generator() {
                 onSelectTemplate={handleSelectTemplate}
                 values={values}
                 onChangeValue={handleChangeValue}
+                fieldAdjustments={fieldAdjustments}
+                onChangeAdjustment={handleAdjustmentChange}
+                onUploadCustomTag={handleUploadCustomTag}
               />
             </section>
 
@@ -279,6 +355,8 @@ export default function Generator() {
                 onChangeLogoSlot={(slotId, img) =>
                   setLogoSlotImages((prev) => ({ ...prev, [slotId]: img }))
                 }
+                extraLogosDivider={extraLogosDivider}
+                onChangeDivider={setExtraLogosDivider}
               />
             </section>
 

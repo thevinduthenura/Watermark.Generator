@@ -118,7 +118,7 @@ export function renderBanner(ctx: AnyCtx, loaded: LoadedTemplate, inputs: Render
     drawContain(ctx, userDrawable(inputs.qrImage), boxToRect(t.qrSlot.box, banner));
   }
 
-  // 4. Extra logos row
+  // 4. Extra logos row (with optional divider lines)
   if (t.extraLogosZone && inputs.extraLogos.length) {
     const zone = boxToRect(t.extraLogosZone.box, banner);
     const rects = layoutExtraLogos(
@@ -127,15 +127,68 @@ export function renderBanner(ctx: AnyCtx, loaded: LoadedTemplate, inputs: Render
       t.extraLogosZone.gapPercent * banner.w,
       t.extraLogosZone.align,
     );
-    rects.forEach((r, i) => drawImageHQ(ctx, userDrawable(inputs.extraLogos[i]), r.x, r.y, r.w, r.h));
+
+    const showDividers =
+      inputs.extraLogosDivider?.showDividers !== undefined
+        ? inputs.extraLogosDivider.showDividers
+        : Boolean(t.extraLogosZone?.showDividers);
+    const dividerWidth =
+      inputs.extraLogosDivider?.dividerWidth ?? t.extraLogosZone?.dividerWidth ?? 1.5;
+    const dividerColor =
+      inputs.extraLogosDivider?.dividerColor ?? t.extraLogosZone?.dividerColor ?? "rgba(255, 255, 255, 0.25)";
+    const dividerHeightPct =
+      inputs.extraLogosDivider?.dividerHeightPercent ?? t.extraLogosZone?.dividerHeightPercent ?? 0.75;
+
+    rects.forEach((r, i) => {
+      drawImageHQ(ctx, userDrawable(inputs.extraLogos[i]), r.x, r.y, r.w, r.h);
+
+      // Draw vertical separator line between logos if enabled
+      if (showDividers && i < rects.length - 1) {
+        const nextR = rects[i + 1];
+        const lineX = (r.x + r.w + nextR.x) / 2;
+        const lineH = zone.h * dividerHeightPct;
+        const lineY = zone.y + (zone.h - lineH) / 2;
+
+        ctx.save();
+        ctx.strokeStyle = dividerColor;
+        ctx.lineWidth = dividerWidth;
+        ctx.beginPath();
+        ctx.moveTo(lineX, lineY);
+        ctx.lineTo(lineX, lineY + lineH);
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
   }
 
-  // 5. Text fields
+  // 5. Text fields (with user interactive scale/position adjustment support)
   for (const field of t.fields) {
     const raw = inputs.values[field.id] ?? field.defaultValue ?? "";
-    const r = boxToRect(field.box, banner);
-    const fitted = fitText(ctx, raw, field, r.w, r.h, banner.h);
-    if (fitted) drawFittedText(ctx, fitted, field, r.x, r.y, r.w, r.h);
+    const adj = inputs.fieldAdjustments?.[field.id];
+
+    // Compute effective box with user adjustments
+    let r = boxToRect(field.box, banner);
+    const scale = adj?.scale || 1.0;
+
+    if (scale !== 1.0) {
+      const origW = r.w;
+      const origH = r.h;
+      r.w = origW * scale;
+      r.h = origH * scale;
+      r.x -= (r.w - origW) / 2;
+      r.y -= (r.h - origH) / 2;
+    }
+
+    if (adj) {
+      if (adj.offsetX) r.x += (adj.offsetX / 100) * banner.w;
+      if (adj.offsetY) r.y += (adj.offsetY / 100) * banner.h;
+    }
+
+    const effectiveField = adj?.font ? { ...field, font: adj.font } : field;
+    const bannerH = banner.h * scale;
+
+    const fitted = fitText(ctx, raw, effectiveField, r.w, r.h, bannerH);
+    if (fitted) drawFittedText(ctx, fitted, effectiveField, r.x, r.y, r.w, r.h);
   }
 
   ctx.restore();

@@ -54,6 +54,14 @@ export interface ExtraLogosZone {
   /** Gap between logos, as a fraction of banner WIDTH. */
   gapPercent: number;
   align: HAlign;
+  /** Show vertical divider lines between logos. */
+  showDividers?: boolean;
+  /** Thickness of the divider line in pixels (default: 1.5). */
+  dividerWidth?: number;
+  /** Color of the divider line (default: rgba(255,255,255,0.25)). */
+  dividerColor?: string;
+  /** Height of the divider line as fraction of zone height (0.2 to 1.0, default: 0.75). */
+  dividerHeightPercent?: number;
 }
 
 /** A custom font shipped with the template (uploaded by the admin). */
@@ -118,12 +126,34 @@ export interface UserImage {
   height: number;
 }
 
+export interface FieldAdjustment {
+  /** Offset X in percentage of banner width (-20 to +20). */
+  offsetX?: number;
+  /** Offset Y in percentage of banner height (-20 to +20). */
+  offsetY?: number;
+  /** Font size multiplier (0.5 to 2.0). */
+  scale?: number;
+  /** Custom font override selected by the user. */
+  font?: string;
+}
+
+export interface ExtraLogosDividerOptions {
+  showDividers?: boolean;
+  dividerWidth?: number;
+  dividerColor?: string;
+  dividerHeightPercent?: number;
+}
+
 /** Everything the renderer needs besides the template. */
 export interface RenderInputs {
   values: Record<string, string>;
   logoSlotImages: Record<string, UserImage | undefined>;
   qrImage?: UserImage;
   extraLogos: UserImage[];
+  /** Optional interactive offsets, font choice, and scale applied by the photographer. */
+  fieldAdjustments?: Record<string, FieldAdjustment>;
+  /** Optional runtime divider customization for extra logos. */
+  extraLogosDivider?: ExtraLogosDividerOptions;
 }
 
 export type Orientation = "landscape" | "portrait";

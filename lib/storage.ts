@@ -1,7 +1,7 @@
 /**
  * LocalStorage persistence for user inputs, resolution choices, and extra logos.
  */
-import type { Orientation, UserImage } from "./types";
+import type { ExtraLogosDividerOptions, FieldAdjustment, Orientation, UserImage } from "./types";
 
 const STORAGE_KEY = "watermark_generator_saved_state_v1";
 
@@ -16,6 +16,8 @@ export interface StoredState {
   bannerOnly?: boolean;
   extraLogos: { id: string; name: string; src: string; width: number; height: number }[];
   qrImage?: { id: string; name: string; src: string; width: number; height: number };
+  fieldAdjustments?: Record<string, FieldAdjustment>;
+  extraLogosDivider?: ExtraLogosDividerOptions;
 }
 
 export function loadSavedState(): Partial<StoredState> | null {

@@ -14,6 +14,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase";
 import { downloadBlob, loadImage, readFileAsArrayBuffer, readFileAsDataUrl, sanitizeFilename } from "@/lib/utils";
+import { detectBannerBounds, cropImageRegion, type DetectedBounds } from "@/lib/imageDraw";
 import type { Box, Template, TemplateFont } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import styles from "./page.module.css";
@@ -84,6 +85,14 @@ export default function AdminPage() {
   const [cloudSlug, setCloudSlug] = useState<string>("custom-banner");
   const [publishing, setPublishing] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [fullCanvasState, setFullCanvasState] = useState<{
+    rawImg: HTMLImageElement;
+    rawBlob: Blob;
+    croppedImg: HTMLImageElement;
+    croppedBlob: Blob;
+    bounds: DetectedBounds;
+    isUsingCropped: boolean;
+  } | null>(null);
 
   const blankTagInputRef = useRef<HTMLInputElement>(null);
   const importZipInputRef = useRef<HTMLInputElement>(null);
@@ -113,23 +122,88 @@ export default function AdminPage() {
     try {
       const dataUrl = await readFileAsDataUrl(file);
       const img = await loadImage(dataUrl);
-      setBlankTagImg(img);
-      setBlankTagBlob(file);
-      setTemplate((prev) => ({
-        ...prev,
-        blankTag: file.name,
-        naturalWidth: img.naturalWidth || img.width,
-        naturalHeight: img.naturalHeight || img.height,
-      }));
-      setStatusMessage({
-        type: "success",
-        text: `Loaded blank tag (${img.naturalWidth} × ${img.naturalHeight}px)`,
-      });
+
+      // Detect if user uploaded a full-size Photoshop canvas (e.g. 5184x3456) with banner at bottom
+      const bounds = detectBannerBounds(img);
+      if (bounds.isFullCanvas) {
+        const cropped = await cropImageRegion(img, 0, bounds.minY, bounds.width, bounds.height);
+        setFullCanvasState({
+          rawImg: img,
+          rawBlob: file,
+          croppedImg: cropped.image,
+          croppedBlob: cropped.blob,
+          bounds,
+          isUsingCropped: true,
+        });
+
+        setBlankTagImg(cropped.image);
+        setBlankTagBlob(cropped.blob);
+
+        const bottomMargin = Math.max(
+          0,
+          Math.round(((bounds.canvasHeight - (bounds.minY + bounds.height)) / bounds.canvasHeight) * 100)
+        );
+
+        setTemplate((prev) => ({
+          ...prev,
+          blankTag: file.name,
+          naturalWidth: bounds.width,
+          naturalHeight: bounds.height,
+          placement: {
+            ...prev.placement,
+            widthPercent: 100,
+            bottomMarginPercent: bottomMargin,
+          },
+        }));
+
+        setStatusMessage({
+          type: "success",
+          text: `🎯 Auto-detected Photoshop full canvas (${bounds.canvasWidth} × ${bounds.canvasHeight}px)! Auto-cropped bottom watermark strip (${bounds.width} × ${bounds.height}px, ratio ${(bounds.width / bounds.height).toFixed(1)}:1).`,
+        });
+      } else {
+        setFullCanvasState(null);
+        setBlankTagImg(img);
+        setBlankTagBlob(file);
+        setTemplate((prev) => ({
+          ...prev,
+          blankTag: file.name,
+          naturalWidth: img.naturalWidth || img.width,
+          naturalHeight: img.naturalHeight || img.height,
+        }));
+        setStatusMessage({
+          type: "success",
+          text: `Loaded blank tag strip (${img.naturalWidth} × ${img.naturalHeight}px)`,
+        });
+      }
     } catch (err) {
       setStatusMessage({
         type: "error",
         text: "Failed to read blank tag image file",
       });
+    }
+  };
+
+  const handleToggleFullCanvas = () => {
+    if (!fullCanvasState) return;
+    const nextUsingCropped = !fullCanvasState.isUsingCropped;
+    setFullCanvasState({ ...fullCanvasState, isUsingCropped: nextUsingCropped });
+
+    if (nextUsingCropped) {
+      setBlankTagImg(fullCanvasState.croppedImg);
+      setBlankTagBlob(fullCanvasState.croppedBlob);
+      setTemplate((prev) => ({
+        ...prev,
+        naturalWidth: fullCanvasState.bounds.width,
+        naturalHeight: fullCanvasState.bounds.height,
+      }));
+    } else {
+      setBlankTagImg(fullCanvasState.rawImg);
+      setBlankTagBlob(fullCanvasState.rawBlob);
+      setTemplate((prev) => ({
+        ...prev,
+        naturalWidth: fullCanvasState.bounds.canvasWidth,
+        naturalHeight: fullCanvasState.bounds.canvasHeight,
+      }));
     }
   };
 
@@ -450,6 +524,20 @@ export default function AdminPage() {
             <span className={styles.tagDim}>
               {template.naturalWidth} × {template.naturalHeight} px
             </span>
+
+            {fullCanvasState && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleToggleFullCanvas}
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderColor: "var(--accent)" }}
+                title="Toggle between cropped watermark strip and full Photoshop canvas"
+              >
+                {fullCanvasState.isUsingCropped
+                  ? "✂️ Using Cropped Banner (Click for Full Canvas)"
+                  : "🖼️ Using Full Canvas (Click for Cropped Banner)"}
+              </button>
+            )}
           </div>
 
           <div className={styles.toolGroup}>
