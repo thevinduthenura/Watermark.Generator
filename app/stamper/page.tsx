@@ -144,6 +144,7 @@ export default function StamperPage() {
   const [isBatchExporting, setIsBatchExporting] = useState<boolean>(false);
   const [batchProgress, setBatchProgress] = useState<number>(0);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [mobileTab, setMobileTab] = useState<"controls" | "preview">("controls");
 
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -416,6 +417,9 @@ export default function StamperPage() {
         }
         return next;
       });
+      if (typeof window !== "undefined" && window.innerWidth <= 1024) {
+        setMobileTab("preview");
+      }
       setStatusMsg({
         type: "success",
         text: `Loaded ${newItems.length} photo${newItems.length > 1 ? "s" : ""} to workspace queue.`,
@@ -546,9 +550,32 @@ export default function StamperPage() {
           </div>
         )}
 
+        {/* Mobile View Switcher (Visible on <= 1024px) */}
+        <div className={styles.mobileViewSwitcher}>
+          <button
+            type="button"
+            className={`${styles.mobileViewBtn} ${mobileTab === "controls" ? styles.mobileViewBtnActive : ""}`}
+            onClick={() => setMobileTab("controls")}
+          >
+            <Sliders size={14} />
+            <span>WATERMARK SETUP</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.mobileViewBtn} ${mobileTab === "preview" ? styles.mobileViewBtnActive : ""}`}
+            onClick={() => setMobileTab("preview")}
+          >
+            <Camera size={14} />
+            <span>PREVIEW & EXPORT</span>
+            {photos.length > 0 && (
+              <span className={styles.mobileViewBadge}>{photos.length}</span>
+            )}
+          </button>
+        </div>
+
         <div className={styles.workspaceGrid}>
           {/* ================= LEFT CONTROLS ================= */}
-          <div className={styles.controlColumn}>
+          <div className={`${styles.controlColumn} ${mobileTab !== "controls" ? styles.mobileHiddenOnMobile : ""}`}>
             {/* 1. Mode Segment */}
             <div className={styles.controlCard}>
               <div className={styles.cardHeader}>
@@ -957,10 +984,26 @@ export default function StamperPage() {
                 </div>
               </div>
             </div>
+
+            {/* Mobile Quick Switcher Helper */}
+            <div className={styles.mobileHelperWrap}>
+              <button
+                type="button"
+                className={styles.mobileHelperBtn}
+                onClick={() => setMobileTab("preview")}
+              >
+                <Camera size={15} color="var(--accent-green)" />
+                <span>VIEW LIVE PREVIEW & EXPORT</span>
+                <span className={styles.mobileHelperBadge}>
+                  {photos.length} {photos.length === 1 ? "photo" : "photos"}
+                </span>
+                <ArrowRight size={14} style={{ marginLeft: "auto" }} />
+              </button>
+            </div>
           </div>
 
           {/* ================= RIGHT PREVIEW & BATCH QUEUE ================= */}
-          <div className={styles.previewColumn}>
+          <div className={`${styles.previewColumn} ${mobileTab !== "preview" ? styles.mobileHiddenOnMobile : ""}`}>
             {/* Photos Dropzone Card */}
             <div className={styles.dropCard}>
               <div
@@ -1096,6 +1139,65 @@ export default function StamperPage() {
             </div>
           </div>
         </div>
+
+        {/* Sticky Mobile Floating Action Bar */}
+        {photos.length > 0 && (
+          <aside className={styles.stickyMobileBar}>
+            <div className={styles.stickyMobileInner}>
+              <div className={styles.stickyMetaBox}>
+                <span className={styles.stickyPhotoBadge}>
+                  {activePhotoIdx + 1} / {photos.length}
+                </span>
+                <span className={styles.stickyFormatBadge}>
+                  {exportFormat.split("/")[1].toUpperCase()}
+                </span>
+              </div>
+
+              <div className={styles.stickyBtnRow}>
+                <button
+                  type="button"
+                  className={styles.stickySwitchBtn}
+                  onClick={() => setMobileTab(mobileTab === "controls" ? "preview" : "controls")}
+                  aria-label="Toggle view"
+                >
+                  {mobileTab === "controls" ? (
+                    <>
+                      <Camera size={13} />
+                      <span>PREVIEW</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sliders size={13} />
+                      <span>EDIT</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.stickySaveBtn}
+                  disabled={activePhotoIdx < 0 || isBatchExporting}
+                  onClick={handleDownloadActive}
+                >
+                  <Download size={14} />
+                  <span>SAVE PHOTO</span>
+                </button>
+
+                {photos.length > 1 && (
+                  <button
+                    type="button"
+                    className={styles.stickyZipBtn}
+                    disabled={isBatchExporting}
+                    onClick={handleDownloadAllZip}
+                  >
+                    <FolderArchive size={14} />
+                    <span>ZIP ({photos.length})</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </aside>
+        )}
       </main>
 
       <Footer />

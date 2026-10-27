@@ -176,3 +176,13 @@
     order: -1;
   }
 }
+
+@media (max-width: 640px) {
+  .mainContainer {
+    padding: 20px 12px;
+  }
+  .sectionCard {
+    padding: 18px 14px;
+    gap: 16px;
+  }
+}
