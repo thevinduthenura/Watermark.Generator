@@ -3,7 +3,7 @@
 import type { SelectedItemRef } from "./BuilderCanvas";
 import type { Box, ExtraLogosZone, LogoSlot, QrSlot, Template, TextField } from "@/lib/types";
 import { POPULAR_FONTS, ensureGoogleFont, registerCustomFontFromFile } from "@/lib/fonts";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, AlignCenter, AlignVerticalJustifyCenter, Copy, Maximize2 } from "lucide-react";
 import styles from "./PropertyPanel.module.css";
 
 interface PropertyPanelProps {
@@ -33,20 +33,64 @@ export default function PropertyPanel({
       onUpdateTemplate({ ...template, fields: updatedFields });
     };
 
+    const handleDuplicateField = () => {
+      const newField: TextField = {
+        ...field,
+        id: `${field.id}_copy_${Date.now().toString().slice(-4)}`,
+        label: `${field.label} (Copy)`,
+        box: {
+          ...field.box,
+          x: Math.min(0.9 - field.box.w, field.box.x + 0.03),
+          y: Math.min(0.9 - field.box.h, field.box.y + 0.05),
+        },
+      };
+      onUpdateTemplate({ ...template, fields: [...template.fields, newField] });
+    };
+
     return (
       <div className={styles.panel}>
-        <div className={styles.panelHeader}>
+        <div className={styles.panelHeader} style={{ flexWrap: "wrap", gap: "8px" }}>
           <span className={styles.typeBadge}>TEXT FIELD</span>
-          <button
-            type="button"
-            className="btn-danger"
-            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
-            onClick={() => onDeleteItem(selectedItem)}
-          >
-            <Trash2 size={13} />
-            <span>Delete Field</span>
-          </button>
+
+          <div style={{ display: "inline-flex", gap: "4px" }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              title="Center Horizontally"
+              style={{ padding: "4px 8px", fontSize: "11px" }}
+              onClick={() => updateField({ box: { ...field.box, x: Math.max(0, (1 - field.box.w) / 2) } })}
+            >
+              <AlignCenter size={13} />
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              title="Center Vertically"
+              style={{ padding: "4px 8px", fontSize: "11px" }}
+              onClick={() => updateField({ box: { ...field.box, y: Math.max(0, (1 - field.box.h) / 2) } })}
+            >
+              <AlignVerticalJustifyCenter size={13} />
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              title="Duplicate Field"
+              style={{ padding: "4px 8px", fontSize: "11px" }}
+              onClick={handleDuplicateField}
+            >
+              <Copy size={13} />
+            </button>
+            <button
+              type="button"
+              className="btn-danger"
+              style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 8px", fontSize: "11px" }}
+              onClick={() => onDeleteItem(selectedItem)}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
+
 
         <div className={styles.formGrid}>
           <div className={styles.fieldItem}>

@@ -19,6 +19,8 @@ interface BuilderCanvasProps {
   onUpdateBox: (type: SelectableItemType, id: string | undefined, box: Box) => void;
   activeTool: "select" | "add_field" | "add_logo" | "add_qr" | "add_extra";
   onCreatedBox: (type: SelectableItemType, box: Box) => void;
+  livePreview?: boolean;
+  onDeleteSelected?: () => void;
 }
 
 export default function BuilderCanvas({
@@ -29,6 +31,8 @@ export default function BuilderCanvas({
   onUpdateBox,
   activeTool,
   onCreatedBox,
+  livePreview = false,
+  onDeleteSelected,
 }: BuilderCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(800);
@@ -41,6 +45,66 @@ export default function BuilderCanvas({
     item?: SelectedItemRef;
   } | null>(null);
 
+  // Keyboard navigation & Delete support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedItem) return;
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA" ||
+        document.activeElement?.tagName === "SELECT"
+      ) {
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        onDeleteSelected?.();
+        return;
+      }
+
+      if (e.key === "Escape") {
+        onSelectItem(null);
+        return;
+      }
+
+      const step = e.shiftKey ? 0.02 : 0.005;
+      let currentBox: Box | null = null;
+
+      if (selectedItem.type === "field") {
+        currentBox = template.fields.find((f) => f.id === selectedItem.id)?.box || null;
+      } else if (selectedItem.type === "logoSlot") {
+        currentBox = template.logoSlots.find((s) => s.id === selectedItem.id)?.box || null;
+      } else if (selectedItem.type === "qrSlot" && template.qrSlot) {
+        currentBox = template.qrSlot.box;
+      } else if (selectedItem.type === "extraLogosZone" && template.extraLogosZone) {
+        currentBox = template.extraLogosZone.box;
+      }
+
+      if (!currentBox) return;
+
+      let dx = 0;
+      let dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      else if (e.key === "ArrowRight") dx = step;
+      else if (e.key === "ArrowUp") dy = -step;
+      else if (e.key === "ArrowDown") dy = step;
+
+      if (dx !== 0 || dy !== 0) {
+        e.preventDefault();
+        const newBox: Box = {
+          ...currentBox,
+          x: Math.max(0, Math.min(1 - currentBox.w, currentBox.x + dx)),
+          y: Math.max(0, Math.min(1 - currentBox.h, currentBox.y + dy)),
+        };
+        onUpdateBox(selectedItem.type, selectedItem.id, newBox);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedItem, template, onUpdateBox, onDeleteSelected, onSelectItem]);
+
   // Resize observer to scale interactive canvas overlay
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,6 +116,7 @@ export default function BuilderCanvas({
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
 
   const naturalWidth = template.naturalWidth || 5184;
   const naturalHeight = template.naturalHeight || 285;
@@ -217,6 +282,7 @@ export default function BuilderCanvas({
       {/* 1. Text Fields */}
       {template.fields.map((f) => {
         const active = isSelected("field", f.id);
+        const approxFontSize = Math.max(9, Math.min(26, displayHeight * f.box.h * (f.maxFontSize || 0.45)));
         return (
           <div
             key={f.id}
@@ -229,9 +295,28 @@ export default function BuilderCanvas({
             }}
             onMouseDown={(e) => handleBoxMouseDown(e, "field", f.id, f.box)}
           >
-            <div className={styles.boxTag}>
-              <span>{f.label}</span>
-            </div>
+            {livePreview ? (
+              <div
+                className={styles.simulatedText}
+                style={{
+                  fontFamily: f.font || "sans-serif",
+                  fontWeight: f.weight || 600,
+                  color: f.color || "#ffffff",
+                  justifyContent:
+                    f.align === "left" ? "flex-start" : f.align === "right" ? "flex-end" : "center",
+                  alignItems:
+                    f.valign === "top" ? "flex-start" : f.valign === "bottom" ? "flex-end" : "center",
+                  textTransform: f.uppercase ? "uppercase" : "none",
+                  fontSize: `${approxFontSize}px`,
+                }}
+              >
+                {f.defaultValue || f.placeholder || f.label}
+              </div>
+            ) : (
+              <div className={styles.boxTag}>
+                <span>{f.label}</span>
+              </div>
+            )}
             {active && (
               <>
                 <div
@@ -263,9 +348,13 @@ export default function BuilderCanvas({
             }}
             onMouseDown={(e) => handleBoxMouseDown(e, "logoSlot", s.id, s.box)}
           >
-            <div className={styles.boxTag}>
-              <span>Logo: {s.label}</span>
-            </div>
+            {livePreview ? (
+              <div className={styles.simulatedPlaceholder}>LOGO: {s.label}</div>
+            ) : (
+              <div className={styles.boxTag}>
+                <span>Logo: {s.label}</span>
+              </div>
+            )}
             {active && (
               <div
                 className={`${styles.handle} ${styles.handleSe}`}
@@ -290,9 +379,13 @@ export default function BuilderCanvas({
             handleBoxMouseDown(e, "qrSlot", undefined, template.qrSlot!.box)
           }
         >
-          <div className={styles.boxTag}>
-            <span>QR: {template.qrSlot.label}</span>
-          </div>
+          {livePreview ? (
+            <div className={styles.simulatedPlaceholder}>[QR]</div>
+          ) : (
+            <div className={styles.boxTag}>
+              <span>QR: {template.qrSlot.label}</span>
+            </div>
+          )}
           {isSelected("qrSlot") && (
             <div
               className={`${styles.handle} ${styles.handleSe}`}
@@ -323,9 +416,13 @@ export default function BuilderCanvas({
             )
           }
         >
-          <div className={styles.boxTag}>
-            <span>Extra Logos Zone</span>
-          </div>
+          {livePreview ? (
+            <div className={styles.simulatedPlaceholder}>EXTRA LOGOS</div>
+          ) : (
+            <div className={styles.boxTag}>
+              <span>Extra Logos Zone</span>
+            </div>
+          )}
           {isSelected("extraLogosZone") && (
             <div
               className={`${styles.handle} ${styles.handleSe}`}
@@ -342,6 +439,7 @@ export default function BuilderCanvas({
           )}
         </div>
       )}
+
 
       {/* Temporary drawing box when dragging to create */}
       {dragging?.type === "create" && (

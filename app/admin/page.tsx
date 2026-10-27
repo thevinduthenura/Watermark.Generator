@@ -17,6 +17,7 @@ import { downloadBlob, loadImage, readFileAsArrayBuffer, readFileAsDataUrl, sani
 import { detectBannerBounds, cropImageRegion, type DetectedBounds } from "@/lib/imageDraw";
 import type { Box, Template, TemplateFont } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
+import gsap from "gsap";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -32,8 +33,18 @@ import {
   Download,
   FolderOpen,
   Send,
+  Eye,
+  EyeOff,
+  Undo2,
+  Redo2,
+  Zap,
+  Music,
+  GraduationCap,
+  Camera,
+  Sparkles,
 } from "lucide-react";
 import styles from "./page.module.css";
+
 
 const DEFAULT_BLANK_TAG_PATH = "/templates/default/blank-tag.png";
 
@@ -110,8 +121,203 @@ export default function AdminPage() {
     isUsingCropped: boolean;
   } | null>(null);
 
+  const [livePreview, setLivePreview] = useState<boolean>(false);
+  const [history, setHistory] = useState<Template[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const adminPageRef = useRef<HTMLDivElement>(null);
+
   const blankTagInputRef = useRef<HTMLInputElement>(null);
   const importZipInputRef = useRef<HTMLInputElement>(null);
+
+  // GSAP Entrance
+  useEffect(() => {
+    if (!adminPageRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        `.${styles.adminHeader}, .${styles.toolbar}, .${styles.builderGrid}`,
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.65, stagger: 0.1, ease: "power3.out" }
+      );
+    }, adminPageRef);
+    return () => ctx.revert();
+  }, []);
+
+  const pushHistory = (newTemplate: Template) => {
+    setTemplate(newTemplate);
+    setHistory((prev) => [...prev.slice(0, historyIndex + 1), newTemplate].slice(-30));
+    setHistoryIndex((prev) => prev + 1);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const prev = history[historyIndex - 1];
+      setHistoryIndex((idx) => idx - 1);
+      setTemplate(prev);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const next = history[historyIndex + 1];
+      setHistoryIndex((idx) => idx + 1);
+      setTemplate(next);
+    }
+  };
+
+  const applyLayoutPreset = (presetKey: "sports" | "concert" | "grad" | "minimal") => {
+    let updated = { ...template };
+    if (presetKey === "sports") {
+      updated = {
+        ...updated,
+        name: "Sports High-Speed Tag",
+        fields: [
+          {
+            id: "event",
+            label: "Event Name",
+            placeholder: "COLOMBO MARATHON 2026",
+            defaultValue: "COLOMBO MARATHON 2026",
+            box: { x: 0.28, y: 0.1, w: 0.42, h: 0.8 },
+            font: "Outfit",
+            weight: 700,
+            color: "#ffffff",
+            align: "center",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.58,
+            minFontSize: 0.2,
+            maxLines: 2,
+          },
+          {
+            id: "photographer",
+            label: "Photographer",
+            placeholder: "PHOTO BY MILAQ VISUALS",
+            defaultValue: "PHOTO BY MILAQ VISUALS",
+            box: { x: 0.73, y: 0.14, w: 0.2, h: 0.45 },
+            font: "Inter",
+            weight: 600,
+            color: "#D4FF00",
+            align: "right",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.32,
+            minFontSize: 0.14,
+            maxLines: 1,
+          },
+        ],
+        qrSlot: { label: "Scan for High-Res", box: { x: 0.945, y: 0.14, w: 0.042, h: 0.72 } },
+        extraLogosZone: { box: { x: 0.04, y: 0.15, w: 0.2, h: 0.7 }, gapPercent: 0.01, align: "center" },
+      };
+    } else if (presetKey === "concert") {
+      updated = {
+        ...updated,
+        name: "Concert Nightlife Tag",
+        fields: [
+          {
+            id: "artist",
+            label: "Festival / Artist",
+            placeholder: "GROWTICA SESSIONS · ARENA LIVE",
+            defaultValue: "GROWTICA SESSIONS · ARENA LIVE",
+            box: { x: 0.2, y: 0.1, w: 0.6, h: 0.5 },
+            font: "Outfit",
+            weight: 800,
+            color: "#D4FF00",
+            align: "center",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.45,
+            minFontSize: 0.18,
+            maxLines: 1,
+          },
+          {
+            id: "meta",
+            label: "Date & Location",
+            placeholder: "OCTOBER 2026 // VIP PASS #GROWTICA",
+            defaultValue: "OCTOBER 2026 // VIP PASS #GROWTICA",
+            box: { x: 0.25, y: 0.58, w: 0.5, h: 0.35 },
+            font: "Inter",
+            weight: 500,
+            color: "#E6E6E6",
+            align: "center",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.28,
+            minFontSize: 0.12,
+            maxLines: 1,
+          },
+        ],
+        qrSlot: { label: "VIP Ticket QR", box: { x: 0.93, y: 0.12, w: 0.05, h: 0.76 } },
+        extraLogosZone: { box: { x: 0.03, y: 0.15, w: 0.14, h: 0.7 }, gapPercent: 0.01, align: "center" },
+      };
+    } else if (presetKey === "grad") {
+      updated = {
+        ...updated,
+        name: "Convocation Formal Tag",
+        fields: [
+          {
+            id: "title",
+            label: "Institution / Title",
+            placeholder: "ANNUAL GENERAL CONVOCATION",
+            defaultValue: "ANNUAL GENERAL CONVOCATION",
+            box: { x: 0.25, y: 0.12, w: 0.5, h: 0.45 },
+            font: "Outfit",
+            weight: 700,
+            color: "#ffffff",
+            align: "center",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.4,
+            minFontSize: 0.16,
+            maxLines: 1,
+          },
+          {
+            id: "sub",
+            label: "Faculty / Degree",
+            placeholder: "FACULTY OF COMPUTING & ENGINEERING",
+            defaultValue: "FACULTY OF COMPUTING & ENGINEERING",
+            box: { x: 0.25, y: 0.55, w: 0.5, h: 0.35 },
+            font: "Inter",
+            weight: 500,
+            color: "#E6E6E6",
+            align: "center",
+            valign: "middle",
+            uppercase: false,
+            maxFontSize: 0.25,
+            minFontSize: 0.12,
+            maxLines: 1,
+          },
+        ],
+        qrSlot: undefined,
+        extraLogosZone: { box: { x: 0.05, y: 0.15, w: 0.15, h: 0.7 }, gapPercent: 0.01, align: "center" },
+      };
+    } else if (presetKey === "minimal") {
+      updated = {
+        ...updated,
+        name: "Minimal Studio Signature",
+        fields: [
+          {
+            id: "studio",
+            label: "Studio Signature",
+            placeholder: "MILAQ CREATIVE STUDIO © 2026",
+            defaultValue: "MILAQ CREATIVE STUDIO © 2026",
+            box: { x: 0.6, y: 0.25, w: 0.35, h: 0.5 },
+            font: "Inter",
+            weight: 600,
+            color: "#ffffff",
+            align: "right",
+            valign: "middle",
+            uppercase: true,
+            maxFontSize: 0.35,
+            minFontSize: 0.15,
+            maxLines: 1,
+          },
+        ],
+        qrSlot: undefined,
+        extraLogosZone: undefined,
+      };
+    }
+    pushHistory(updated);
+    setStatusMessage({ type: "success", text: `Loaded layout preset "${presetKey.toUpperCase()}"` });
+  };
 
   // Load initial default blank tag image
   useEffect(() => {
@@ -131,6 +337,7 @@ export default function AdminPage() {
     }
     loadInitial();
   }, []);
+
 
   // Handle uploading a new Blank Tag PNG
   const handleUploadBlankTag = async (file: File | null) => {
@@ -493,9 +700,10 @@ export default function AdminPage() {
 
   return (
     <main>
+
       <Header activeTab="admin" />
 
-      <div className={styles.adminContainer}>
+      <div ref={adminPageRef} className={styles.adminContainer}>
         {/* Top Bar: Title & Auth */}
         <div className={styles.adminHeader}>
           <div className={styles.titleGroup}>
@@ -507,6 +715,77 @@ export default function AdminPage() {
           </div>
 
           <AuthModal onSessionChange={setAdminUser} />
+        </div>
+
+        {/* Quick Layout Presets Bar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "10px",
+            background: "rgba(212, 255, 0, 0.04)",
+            border: "1px solid rgba(212, 255, 0, 0.18)",
+            borderRadius: "6px",
+            padding: "10px 16px",
+            marginBottom: "16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Sparkles size={14} color="var(--accent-green)" />
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "var(--accent-green)",
+                textTransform: "uppercase",
+              }}
+            >
+              QUICK LAYOUT STARTERS:
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: "11px", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              onClick={() => applyLayoutPreset("sports")}
+            >
+              <Zap size={12} color="var(--accent-green)" />
+              <span>Sports Marathon</span>
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: "11px", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              onClick={() => applyLayoutPreset("concert")}
+            >
+              <Music size={12} color="var(--accent-green)" />
+              <span>Concert Gala</span>
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: "11px", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              onClick={() => applyLayoutPreset("grad")}
+            >
+              <GraduationCap size={12} color="var(--accent-green)" />
+              <span>Convocation</span>
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: "11px", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              onClick={() => applyLayoutPreset("minimal")}
+            >
+              <Camera size={12} color="var(--accent-green)" />
+              <span>Minimal Signature</span>
+            </button>
+          </div>
         </div>
 
         {statusMessage && (
@@ -573,7 +852,7 @@ export default function AdminPage() {
           </div>
 
           <div className={styles.toolGroup}>
-            <span className={styles.toolLabel}>Tool:</span>
+            <span className={styles.toolLabel}>TOOL:</span>
             <button
               type="button"
               className={`${styles.toolBtn} ${activeTool === "select" ? styles.activeTool : ""}`}
@@ -626,15 +905,59 @@ export default function AdminPage() {
         <div className={styles.builderGrid}>
           {/* Visual Canvas Area */}
           <div className={styles.canvasArea}>
-            <div className={styles.canvasCardHeader}>
+            <div className={styles.canvasCardHeader} style={{ flexWrap: "wrap", gap: "8px" }}>
               <span className={styles.canvasCardTitle}>
                 {activeTool === "select"
                   ? "Click any box to select & resize"
                   : `Drag a box on the banner to place ${activeTool.replace("add_", "")}`}
               </span>
-              <span className={styles.canvasRatio}>
-                Aspect Ratio: {(template.naturalWidth / template.naturalHeight).toFixed(2)}:1
-              </span>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* Live Preview Toggle */}
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{
+                    fontSize: "11px",
+                    padding: "4px 10px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    borderColor: livePreview ? "var(--accent-green)" : undefined,
+                    color: livePreview ? "var(--accent-green)" : undefined,
+                  }}
+                  onClick={() => setLivePreview(!livePreview)}
+                >
+                  {livePreview ? <Eye size={12} /> : <EyeOff size={12} />}
+                  <span>{livePreview ? "LIVE SIMULATED" : "WIREFRAME"}</span>
+                </button>
+
+                {/* Undo / Redo */}
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ padding: "4px 8px", fontSize: "11px" }}
+                  disabled={historyIndex <= 0}
+                  onClick={handleUndo}
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo2 size={12} />
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ padding: "4px 8px", fontSize: "11px" }}
+                  disabled={historyIndex >= history.length - 1}
+                  onClick={handleRedo}
+                  title="Redo (Ctrl+Y)"
+                >
+                  <Redo2 size={12} />
+                </button>
+
+                <span className={styles.canvasRatio}>
+                  Aspect Ratio: {(template.naturalWidth / template.naturalHeight).toFixed(2)}:1
+                </span>
+              </div>
             </div>
 
             <BuilderCanvas
@@ -645,13 +968,14 @@ export default function AdminPage() {
               onUpdateBox={handleUpdateBox}
               activeTool={activeTool}
               onCreatedBox={handleCreatedBox}
+              livePreview={livePreview}
+              onDeleteSelected={() => selectedItem && handleDeleteItem(selectedItem)}
             />
 
             <p className={styles.canvasHint} style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
               <Info size={14} style={{ color: "var(--accent)", flexShrink: 0, marginTop: "2px" }} />
               <span>
-                <strong>Scaling:</strong> All boxes are stored as percentages of the banner
-                dimensions, ensuring identical proportions across 1080p, 4K, and 6000x4000 exports.
+                <strong>Controls:</strong> Click to select · Drag to move · Drag corners to resize · Arrow keys to nudge (Shift for fast) · Delete key to remove.
               </span>
             </p>
           </div>
@@ -661,7 +985,7 @@ export default function AdminPage() {
             <PropertyPanel
               template={template}
               selectedItem={selectedItem}
-              onUpdateTemplate={setTemplate}
+              onUpdateTemplate={pushHistory}
               onDeleteItem={handleDeleteItem}
               onAddCustomFont={handleAddCustomFont}
             />
@@ -669,6 +993,7 @@ export default function AdminPage() {
         </div>
 
         {/* Action Footer: Export ZIP & Publish Cloud */}
+
         <div className={styles.actionCard}>
           <div className={styles.actionCol}>
             <h3 className={styles.actionTitle}>Offline & Repository Package</h3>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Mona_Sans, Outfit, Inter } from "next/font/google";
+import CursorFollower from "@/components/ui/CursorFollower";
 import "./globals.css";
 
 const monaSans = Mona_Sans({
@@ -52,7 +53,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <CursorFollower />
+        {children}
+      </body>
     </html>
   );
 }
+
