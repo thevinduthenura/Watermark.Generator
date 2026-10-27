@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, SlidersHorizontal, User } from "lucide-react";
+import { Sparkles, SlidersHorizontal, User, LogIn } from "lucide-react";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
-  activeTab?: "generator" | "admin" | "portal";
+  activeTab?: "generator" | "admin" | "portal" | "login";
 }
 
 export default function Header({ activeTab = "generator" }: HeaderProps) {
@@ -42,6 +42,15 @@ export default function Header({ activeTab = "generator" }: HeaderProps) {
             <SlidersHorizontal size={13} />
             <span>ADMIN BUILDER</span>
           </Link>
+          <Link
+            href="/login"
+            className={`${styles.navLink} ${activeTab === "login" ? styles.active : ""}`}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <LogIn size={13} />
+            <span>ACCOUNT</span>
+          </Link>
+
 
           <a
             href="https://github.com/thevinduthenura/Watermark.Generator"
