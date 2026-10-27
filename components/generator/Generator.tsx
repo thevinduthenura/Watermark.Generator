@@ -161,11 +161,15 @@ export default function Generator() {
       const loadedData = await loadTemplate(ref);
       setLoaded(loadedData);
 
-      // Preserve existing field values where IDs match, fallback to new defaults
+      // Update field values: if switching to custom template, use its fresh values
       setValues((prev) => {
         const next: Record<string, string> = {};
         for (const f of loadedData.template.fields) {
-          next[f.id] = prev[f.id] ?? f.defaultValue ?? "";
+          if (ref.id === "custom:admin") {
+            next[f.id] = f.defaultValue || f.placeholder || "";
+          } else {
+            next[f.id] = prev[f.id] || f.defaultValue || "";
+          }
         }
         return next;
       });

@@ -13,10 +13,11 @@ import {
   adminSaveTemplate,
   adminUploadTemplateFile,
   isSupabaseConfigured,
+  listCloudTemplates,
 } from "@/lib/supabase";
 import { downloadBlob, loadImage, readFileAsArrayBuffer, readFileAsDataUrl, sanitizeFilename } from "@/lib/utils";
 import { detectBannerBounds, cropImageRegion, type DetectedBounds } from "@/lib/imageDraw";
-import type { Box, Template, TemplateFont } from "@/lib/types";
+import type { Box, Template, TemplateFont, TemplateRef } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import gsap from "gsap";
 import {
@@ -43,6 +44,9 @@ import {
   GraduationCap,
   Camera,
   Sparkles,
+  Database,
+  ExternalLink,
+  Cloud,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -129,6 +133,23 @@ export default function AdminPage() {
 
   const blankTagInputRef = useRef<HTMLInputElement>(null);
   const importZipInputRef = useRef<HTMLInputElement>(null);
+
+  const [cloudTemplatesList, setCloudTemplatesList] = useState<TemplateRef[]>([]);
+
+  const refreshCloudTemplates = async () => {
+    if (isSupabaseConfigured()) {
+      try {
+        const list = await listCloudTemplates();
+        setCloudTemplatesList(list);
+      } catch (e) {
+        console.warn("Failed to load cloud templates:", e);
+      }
+    }
+  };
+
+  useEffect(() => {
+    refreshCloudTemplates();
+  }, []);
 
   // GSAP Entrance
   useEffect(() => {
@@ -391,9 +412,17 @@ export default function AdminPage() {
         localStorage.setItem("watermark_admin_custom_template_v1", JSON.stringify(payload));
 
         const saved = loadSavedState() || { values: {}, selectedResolutions: ["5184x3456"], orientation: "landscape" };
+
+        // Fresh values from the admin template
+        const freshValues: Record<string, string> = {};
+        for (const f of template.fields) {
+          freshValues[f.id] = f.defaultValue || f.placeholder || "";
+        }
+
         saveState({
           ...saved,
           templateId: "custom:admin",
+          values: freshValues,
         });
       }
 
@@ -1144,36 +1173,172 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {isSupabaseConfigured() && adminUser && (
-            <div className={styles.actionCol}>
-              <h3 className={styles.actionTitle}>Publish to Supabase Cloud</h3>
+          {isSupabaseConfigured() && (
+            <div className={styles.actionCol} style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "18px" }}>
+              <h3 className={styles.actionTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Cloud size={16} color="var(--accent-green)" />
+                <span>Publish to Supabase Cloud Database</span>
+              </h3>
               <p className={styles.actionDesc}>
-                Instantly publish this template to the cloud. Photographers will see it immediately
-                on the generator page without any git commit.
+                Save this template permanently to the PostgreSQL <code>public.templates</code> table and storage bucket in Supabase.
               </p>
-              <div className={styles.publishRow}>
-                <input
-                  type="text"
-                  placeholder="slug (e.g. ssc-standard)"
-                  value={cloudSlug}
-                  onChange={(e) => setCloudSlug(e.target.value)}
-                  className="text-input"
-                  style={{ maxWidth: "220px" }}
-                />
-                <button
-                  type="button"
-                  className="btn-primary"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-                  onClick={handlePublishCloud}
-                  disabled={publishing}
-                >
-                  <Send size={13} />
-                  <span>{publishing ? "PUBLISHING..." : "SAVE & PUBLISH TO CLOUD"}</span>
-                </button>
-              </div>
+              {adminUser ? (
+                <div className={styles.publishRow}>
+                  <input
+                    type="text"
+                    placeholder="slug (e.g. ssc-standard)"
+                    value={cloudSlug}
+                    onChange={(e) => setCloudSlug(e.target.value)}
+                    className="text-input"
+                    style={{ maxWidth: "220px" }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    onClick={handlePublishCloud}
+                    disabled={publishing}
+                  >
+                    <Send size={13} />
+                    <span>{publishing ? "PUBLISHING..." : "SAVE TO SUPABASE DATABASE"}</span>
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "12px", color: "#888" }}>Admin authentication required to write to database:</span>
+                  <AuthModal onSessionChange={setAdminUser} />
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Live Supabase Database Viewer */}
+        {isSupabaseConfigured() && (
+          <div
+            style={{
+              marginTop: "24px",
+              background: "#121212",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              borderRadius: "8px",
+              padding: "20px 24px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <Database size={15} color="var(--accent-green)" />
+                  <span>SUPABASE DATABASE LIVE VIEWER (TABLE: `public.templates`)</span>
+                </h3>
+                <p style={{ fontSize: "11px", color: "#777", fontFamily: "var(--font-mono)", marginTop: "4px" }}>
+                  Target: https://xipsyadnreaqzobtdarz.supabase.co
+                </p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={refreshCloudTemplates}
+                  style={{ fontSize: "11px", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <span>REFRESH DATABASE</span>
+                </button>
+                <a
+                  href="https://supabase.com/dashboard/project/xipsyadnreaqzobtdarz/editor"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{
+                    fontSize: "11px",
+                    padding: "6px 12px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    borderColor: "var(--accent-green)",
+                    color: "var(--accent-green)",
+                  }}
+                >
+                  <ExternalLink size={12} />
+                  <span>OPEN IN SUPABASE DASHBOARD</span>
+                </a>
+              </div>
+            </div>
+
+            {cloudTemplatesList.length === 0 ? (
+              <div
+                style={{
+                  background: "#0a0a0a",
+                  border: "1px dashed rgba(255, 255, 255, 0.12)",
+                  borderRadius: "6px",
+                  padding: "20px",
+                  textAlign: "center",
+                  color: "#888",
+                  fontSize: "12px",
+                }}
+              >
+                <div>No templates have been published to the cloud database yet.</div>
+                <div style={{ marginTop: "6px", fontSize: "11px", color: "#666" }}>
+                  Use the <strong>"SAVE TO SUPABASE DATABASE"</strong> option above to write your first template into PostgreSQL!
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {cloudTemplatesList.map((ct) => (
+                  <div
+                    key={ct.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: "#0d0d0d",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      borderRadius: "6px",
+                      padding: "10px 16px",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>{ct.name}</div>
+                      <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--accent-green)" }}>
+                        SLUG: {ct.id.replace("cloud:", "")} · STATUS: PUBLISHED IN DB
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ fontSize: "11px", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      onClick={() => {
+                        window.location.href = `/?template=${ct.id}`;
+                      }}
+                    >
+                      <span>TEST IN GENERATOR</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <Footer />
