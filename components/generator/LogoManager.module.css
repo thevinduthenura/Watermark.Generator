@@ -198,3 +198,74 @@
   border-color: var(--accent-green);
   color: var(--text-primary);
 }
+
+/* Extra logos divider controls */
+.dividerControls {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dividerTopRow {
+  display: flex;
+  align-items: center;
+}
+
+.dividerToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.dividerSliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .dividerSliders {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sliderItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sliderLabel {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.sliderVal {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 4px;
+  background: var(--surface-highest);
+  border-radius: 2px;
+}
+

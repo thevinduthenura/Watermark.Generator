@@ -95,3 +95,101 @@ export function containSize(cw: number, ch: number, bw: number, bh: number): { w
   const s = Math.min(bw / cw, bh / ch);
   return { w: cw * s, h: ch * s };
 }
+
+export interface DetectedBounds {
+  isFullCanvas: boolean;
+  minX: number;
+  minY: number;
+  width: number;
+  height: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}
+
+/**
+ * Scan image pixels to find the bounding box of non-transparent content.
+ * Especially useful when a user uploads a 5184x3456 full Photoshop canvas
+ * where the banner is only at the bottom!
+ */
+export function detectBannerBounds(img: HTMLImageElement): DetectedBounds {
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+
+  // Create a downscaled analysis canvas for fast scanning
+  const scale = Math.min(1, 1000 / Math.max(w, h));
+  const sw = Math.max(1, Math.round(w * scale));
+  const sh = Math.max(1, Math.round(h * scale));
+
+  const canvas = createCanvas(sw, sh) as HTMLCanvasElement;
+  const ctx = get2d(canvas);
+  ctx.drawImage(img, 0, 0, sw, sh);
+  const imgData = (ctx as CanvasRenderingContext2D).getImageData(0, 0, sw, sh);
+  const data = imgData.data;
+
+  let minY = sh;
+  let maxY = -1;
+  let minX = sw;
+  let maxX = -1;
+
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      const alpha = data[(y * sw + x) * 4 + 3];
+      if (alpha > 8) {
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
+    }
+  }
+
+  releaseCanvas(canvas);
+
+  if (maxY < 0) {
+    return { isFullCanvas: false, minX: 0, minY: 0, width: w, height: h, canvasWidth: w, canvasHeight: h };
+  }
+
+  const actualMinY = Math.floor(minY / scale);
+  const actualMaxY = Math.ceil(maxY / scale);
+  const actualMinX = Math.floor(minX / scale);
+  const actualMaxX = Math.ceil(maxX / scale);
+
+  const detectedHeight = actualMaxY - actualMinY;
+  // If top 40% or more is empty/transparent and the banner is at the bottom:
+  const isFullCanvas = actualMinY > h * 0.35;
+
+  return {
+    isFullCanvas,
+    minX: actualMinX,
+    minY: actualMinY,
+    width: w,
+    height: Math.max(1, detectedHeight),
+    canvasWidth: w,
+    canvasHeight: h,
+  };
+}
+
+/**
+ * Crop an image region into a new HTMLImageElement + Blob.
+ */
+export async function cropImageRegion(
+  img: HTMLImageElement,
+  sx: number,
+  sy: number,
+  sw: number,
+  sh: number
+): Promise<{ image: HTMLImageElement; blob: Blob }> {
+  const canvas = document.createElement("canvas");
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png"));
+  const croppedImg = new Image();
+  croppedImg.src = URL.createObjectURL(blob);
+  await new Promise((resolve) => {
+    croppedImg.onload = resolve;
+  });
+  return { image: croppedImg, blob };
+}

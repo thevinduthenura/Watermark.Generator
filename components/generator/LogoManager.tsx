@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { loadImage, readFileAsDataUrl } from "@/lib/utils";
-import type { LoadedTemplate, UserImage } from "@/lib/types";
+import type { ExtraLogosDividerOptions, LoadedTemplate, UserImage } from "@/lib/types";
 import styles from "./LogoManager.module.css";
 
 interface LogoManagerProps {
@@ -14,6 +14,8 @@ interface LogoManagerProps {
   onChangeQrImage: (qr?: UserImage) => void;
   logoSlotImages: Record<string, UserImage | undefined>;
   onChangeLogoSlot: (slotId: string, img?: UserImage) => void;
+  extraLogosDivider?: ExtraLogosDividerOptions;
+  onChangeDivider?: (opts: ExtraLogosDividerOptions) => void;
 }
 
 export default function LogoManager({
@@ -24,6 +26,8 @@ export default function LogoManager({
   onChangeQrImage,
   logoSlotImages,
   onChangeLogoSlot,
+  extraLogosDivider,
+  onChangeDivider,
 }: LogoManagerProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -197,6 +201,90 @@ export default function LogoManager({
               onClick={() => fileInputRef.current?.click()}
             >
               <span>Click or drop partner/sponsor logos here (PNG, SVG, JPG, WebP)</span>
+            </div>
+          )}
+
+          {extraLogos.length > 1 && onChangeDivider && (
+            <div className={styles.dividerControls}>
+              <div className={styles.dividerTopRow}>
+                <label className={styles.dividerToggle}>
+                  <input
+                    type="checkbox"
+                    checked={
+                      extraLogosDivider?.showDividers !== undefined
+                        ? extraLogosDivider.showDividers
+                        : Boolean(t.extraLogosZone?.showDividers)
+                    }
+                    onChange={(e) =>
+                      onChangeDivider({
+                        ...extraLogosDivider,
+                        showDividers: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>Vertical Divider Lines Between Logos</span>
+                </label>
+              </div>
+
+              {(extraLogosDivider?.showDividers !== undefined
+                ? extraLogosDivider.showDividers
+                : Boolean(t.extraLogosZone?.showDividers)) && (
+                <div className={styles.dividerSliders}>
+                  <div className={styles.sliderItem}>
+                    <div className={styles.sliderHeader}>
+                      <span className={styles.sliderLabel}>Line Thickness</span>
+                      <span className={styles.sliderVal}>
+                        {extraLogosDivider?.dividerWidth ?? t.extraLogosZone?.dividerWidth ?? 1.5}px
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="6"
+                      step="0.5"
+                      value={extraLogosDivider?.dividerWidth ?? t.extraLogosZone?.dividerWidth ?? 1.5}
+                      onChange={(e) =>
+                        onChangeDivider({
+                          ...extraLogosDivider,
+                          dividerWidth: Number(e.target.value),
+                        })
+                      }
+                      className={styles.rangeInput}
+                    />
+                  </div>
+
+                  <div className={styles.sliderItem}>
+                    <div className={styles.sliderHeader}>
+                      <span className={styles.sliderLabel}>Line Height</span>
+                      <span className={styles.sliderVal}>
+                        {Math.round(
+                          (extraLogosDivider?.dividerHeightPercent ??
+                            t.extraLogosZone?.dividerHeightPercent ??
+                            0.75) * 100
+                        )}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.3"
+                      max="1.0"
+                      step="0.05"
+                      value={
+                        extraLogosDivider?.dividerHeightPercent ??
+                        t.extraLogosZone?.dividerHeightPercent ??
+                        0.75
+                      }
+                      onChange={(e) =>
+                        onChangeDivider({
+                          ...extraLogosDivider,
+                          dividerHeightPercent: Number(e.target.value),
+                        })
+                      }
+                      className={styles.rangeInput}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import type { SelectedItemRef } from "./BuilderCanvas";
 import type { Box, ExtraLogosZone, LogoSlot, QrSlot, Template, TextField } from "@/lib/types";
+import { POPULAR_FONTS, ensureGoogleFont, registerCustomFontFromFile } from "@/lib/fonts";
 import styles from "./PropertyPanel.module.css";
 
 interface PropertyPanelProps {
@@ -76,12 +77,66 @@ export default function PropertyPanel({
           </div>
 
           <div className={styles.fieldItem}>
-            <span className="input-label">Font Family</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <span className="input-label" style={{ marginBottom: 0 }}>Font Family</span>
+              <label className="btn-secondary" style={{ fontSize: "0.72rem", padding: "2px 8px", cursor: "pointer" }}>
+                <span>+ Upload Font</span>
+                <input
+                  type="file"
+                  accept=".woff2,.ttf,.otf"
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      try {
+                        const family = await registerCustomFontFromFile(file);
+                        onAddCustomFont(file);
+                        updateField({ font: family });
+                      } catch (err) {
+                        console.error("Failed to register font:", err);
+                      }
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            <select
+              className="select-input"
+              value={field.font}
+              onChange={(e) => {
+                const val = e.target.value;
+                ensureGoogleFont(val);
+                updateField({ font: val });
+              }}
+            >
+              <optgroup label="Popular Photography Fonts">
+                {POPULAR_FONTS.map((f) => (
+                  <option key={f.family} value={f.family}>
+                    {f.family} ({f.category})
+                  </option>
+                ))}
+              </optgroup>
+              {template.fonts && template.fonts.length > 0 && (
+                <optgroup label="Custom Template Fonts">
+                  {template.fonts.map((f) => (
+                    <option key={f.family} value={f.family}>
+                      {f.family} (Uploaded)
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
             <input
               type="text"
               className="text-input"
+              style={{ marginTop: "6px" }}
+              placeholder="Or type custom font family..."
               value={field.font}
-              onChange={(e) => updateField({ font: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                ensureGoogleFont(val);
+                updateField({ font: val });
+              }}
             />
           </div>
 
@@ -348,6 +403,108 @@ export default function PropertyPanel({
               }
             />
           </div>
+
+          <div className={styles.fieldItem}>
+            <span className="input-label">Vertical Divider Lines</span>
+            <label className={styles.switchLabel}>
+              <input
+                type="checkbox"
+                checked={Boolean(zone.showDividers)}
+                onChange={(e) =>
+                  onUpdateTemplate({
+                    ...template,
+                    extraLogosZone: {
+                      ...zone,
+                      showDividers: e.target.checked,
+                    },
+                  })
+                }
+              />
+              <span>Show divider lines between logos</span>
+            </label>
+          </div>
+
+          {zone.showDividers && (
+            <>
+              <div className={styles.twoCol}>
+                <div className={styles.fieldItem}>
+                  <span className="input-label">Line Thickness (px)</span>
+                  <input
+                    type="number"
+                    min="0.5"
+                    max="8"
+                    step="0.5"
+                    className="text-input"
+                    value={zone.dividerWidth || 1.5}
+                    onChange={(e) =>
+                      onUpdateTemplate({
+                        ...template,
+                        extraLogosZone: {
+                          ...zone,
+                          dividerWidth: Number(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                </div>
+
+                <div className={styles.fieldItem}>
+                  <span className="input-label">Line Height (% Zone)</span>
+                  <input
+                    type="number"
+                    min="20"
+                    max="100"
+                    step="5"
+                    className="text-input"
+                    value={Math.round((zone.dividerHeightPercent || 0.75) * 100)}
+                    onChange={(e) =>
+                      onUpdateTemplate({
+                        ...template,
+                        extraLogosZone: {
+                          ...zone,
+                          dividerHeightPercent: Number(e.target.value) / 100,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className={styles.fieldItem}>
+                <span className="input-label">Divider Line Color</span>
+                <div className={styles.colorRow}>
+                  <input
+                    type="color"
+                    className={styles.colorPicker}
+                    value={zone.dividerColor?.startsWith("#") ? zone.dividerColor : "#ffffff"}
+                    onChange={(e) =>
+                      onUpdateTemplate({
+                        ...template,
+                        extraLogosZone: {
+                          ...zone,
+                          dividerColor: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={zone.dividerColor || "rgba(255, 255, 255, 0.25)"}
+                    onChange={(e) =>
+                      onUpdateTemplate({
+                        ...template,
+                        extraLogosZone: {
+                          ...zone,
+                          dividerColor: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

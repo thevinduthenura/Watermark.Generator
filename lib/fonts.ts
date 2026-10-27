@@ -6,7 +6,40 @@
 import { SINHALA_FALLBACK } from "./textFit";
 import type { TemplateFont } from "./types";
 
+export interface FontChoice {
+  family: string;
+  category: "Display" | "Clean" | "Serif" | "Modern";
+}
+
+export const POPULAR_FONTS: FontChoice[] = [
+  { family: "Outfit", category: "Modern" },
+  { family: "Inter", category: "Clean" },
+  { family: "Bebas Neue", category: "Display" },
+  { family: "Montserrat", category: "Modern" },
+  { family: "Oswald", category: "Display" },
+  { family: "Cinzel", category: "Serif" },
+  { family: "Anton", category: "Display" },
+  { family: "Poppins", category: "Clean" },
+  { family: "Playfair Display", category: "Serif" },
+  { family: "Raleway", category: "Clean" },
+  { family: "League Spartan", category: "Display" },
+  { family: "Cinzel Decorative", category: "Serif" },
+];
+
 const loadedFontKeys = new Set<string>();
+
+/**
+ * Register a custom font uploaded by the user from their disk (.ttf, .otf, .woff, .woff2).
+ */
+export async function registerCustomFontFromFile(file: File): Promise<string> {
+  const family = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_\-\s]/g, "").trim() || "CustomFont";
+  const buffer = await file.arrayBuffer();
+  const fontFace = new FontFace(family, buffer);
+  const loaded = await fontFace.load();
+  document.fonts.add(loaded);
+  loadedFontKeys.add(`custom:${family}:normal`);
+  return family;
+}
 
 /**
  * Load a Google Font family dynamically if not already present in the DOM.
